@@ -3,35 +3,37 @@
 require_once __DIR__ . '/../database/connection.php';
 require_once __DIR__ . '/../auth/Auth.php';
 require_once __DIR__ . '/../permissions/PermissionService.php';
+
 class ModuleManager
 {
-    private $modulesPath;
+    private string $modulesPath;
 
     public function __construct()
     {
         $this->modulesPath = __DIR__ . '/../../modules/';
     }
 
-    public function getInstalledModules()
+    public function getInstalledModules(): array
     {
         $dirs = array_filter(glob($this->modulesPath . '*'), 'is_dir');
-
         $modules = [];
 
         foreach ($dirs as $dir) {
-            $name = basename($dir);
-
             $moduleFile = $dir . '/module.json';
 
             if (file_exists($moduleFile)) {
-                $modules[] = json_decode(file_get_contents($moduleFile), true);
+                $data = json_decode(file_get_contents($moduleFile), true);
+
+                if (is_array($data) && isset($data['name'])) {
+                    $modules[] = $data;
+                }
             }
         }
 
         return $modules;
     }
 
-    public function syncWithDatabase()
+    public function syncWithDatabase(): void
     {
         $pdo = db();
         $modules = $this->getInstalledModules();
@@ -48,41 +50,31 @@ class ModuleManager
 
                 $insert->execute([
                     $module['name'],
-                    $module['title'],
-                    $module['version']
+                    $module['title'] ?? $module['name'],
+                    $module['version'] ?? '0.0.1'
                 ]);
             }
         }
     }
 
-    public function getActiveModules()
+    public function getVisibleModulesForUser(): array
     {
         $pdo = db();
+        $userId = Auth::userId();
 
         $stmt = $pdo->query("SELECT name FROM core_modules WHERE enabled = 1");
+        $modules = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
-    }
-    public function getVisibleModulesForUser()
-{
-    $pdo = db();
+        $visible = [];
 
-    $userId = Auth::userId();
+        foreach ($modules as $moduleName) {
+            $permission = $moduleName . '.access';
 
-    $stmt = $pdo->query("SELECT name FROM core_modules WHERE enabled = 1");
-    $modules = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    $visible = [];
-
-    foreach ($modules as $moduleName) {
-        $permission = $moduleName . '.access';
-
-        if (PermissionService::userHas($userId, $permission)) {
-            $visible[] = $moduleName;
+            if (PermissionService::userHas($userId, $permission)) {
+                $visible[] = $moduleName;
+            }
         }
+
+        return $visible;
     }
-
-    return $visible;
 }
-}
-
