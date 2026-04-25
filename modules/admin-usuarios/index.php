@@ -21,6 +21,7 @@ ob_start();
         <th>Nombre</th>
         <th>Email</th>
         <th>Activo</th>
+        <th>Acciones</th>
     </tr>
 
     <?php foreach ($users as $u): ?>
@@ -29,6 +30,9 @@ ob_start();
             <td><?= htmlspecialchars($u['name']) ?></td>
             <td><?= htmlspecialchars($u['email']) ?></td>
             <td><?= $u['is_active'] ? 'Sí' : 'No' ?></td>
+            <td>
+                <a href="/easyseri/admin-usuarios/editar?id=<?= (int)$u['id'] ?>">Editar</a>
+            </td>
         </tr>
     <?php endforeach; ?>
 </table>

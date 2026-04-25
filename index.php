@@ -90,7 +90,15 @@ $router->post('/admin-usuarios/crear', function () {
     require __DIR__ . '/modules/admin-usuarios/crear.php';
     renderLayout($content);
 });
+$router->get('/admin-usuarios/editar', function () {
+    require __DIR__ . '/modules/admin-usuarios/editar.php';
+    renderLayout($content);
+});
 
+$router->post('/admin-usuarios/editar', function () {
+    require __DIR__ . '/modules/admin-usuarios/editar.php';
+    renderLayout($content);
+});
 
 
 

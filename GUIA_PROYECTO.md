@@ -100,11 +100,11 @@ Antes de integrar aplicaciones reales, se completa toda la base común del siste
 
 ## 👤 6.2 Gestión de usuarios
 - [x ] Listado de usuarios
-- [ ] Crear usuario
-- [ ] Editar usuario
-- [ ] Activar/desactivar usuario
+- [x ] Crear usuario
+- [ x] Editar usuario
+- [ x] Activar/desactivar usuario
 - [ ] Asignar roles
-- [ ] Cambio de contraseña
+- [ x] Cambio de contraseña
 
 ---
 
