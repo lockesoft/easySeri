@@ -48,7 +48,7 @@ $router->get('/', function () use ($basePath) {
     header('Location: ' . $basePath . '/welcome');
     exit;
 });
-
+///////////////////////modulos/////////////////
 $router->get('/welcome', function () {
     $manager = new ModuleManager();
     $visibleModules = $manager->getVisibleModulesForUser();
@@ -63,4 +63,17 @@ $router->get('/welcome', function () {
     renderLayout($content);
 });
 
+$router->get('/admin-usuarios', function () {
+    $manager = new ModuleManager();
+    $visibleModules = $manager->getVisibleModulesForUser();
+
+    if (!in_array('admin-usuarios', $visibleModules)) {
+        http_response_code(403);
+        renderLayout('<h1>403</h1><p>No tienes acceso</p>');
+        return;
+    }
+
+    require __DIR__ . '/modules/admin-usuarios/index.php';
+    renderLayout($content);
+});
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
