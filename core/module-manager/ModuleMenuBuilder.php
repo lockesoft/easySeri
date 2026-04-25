@@ -18,7 +18,7 @@ class ModuleMenuBuilder
         $pdo = db();
         $userId = Auth::userId();
 
-        $stmt = $pdo->query("SELECT name FROM core_modules WHERE enabled = 1 ORDER BY id ASC");
+        $stmt = $pdo->query("SELECT DISTINCT name FROM core_modules WHERE enabled = 1 ORDER BY name ASC");
         $activeModules = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
         $menu = [];

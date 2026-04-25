@@ -103,7 +103,7 @@ Antes de integrar aplicaciones reales, se completa toda la base común del siste
 - [x ] Crear usuario
 - [ x] Editar usuario
 - [ x] Activar/desactivar usuario
-- [ ] Asignar roles
+- [ x] Asignar roles
 - [ x] Cambio de contraseña
 
 ---
