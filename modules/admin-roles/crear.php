@@ -1,6 +1,16 @@
 <?php
 
 require_once __DIR__ . '/../../core/database/connection.php';
+require_once __DIR__ . '/../../core/module-manager/ModuleManager.php';
+
+$manager = new ModuleManager();
+$visibleModules = $manager->getVisibleModulesForUser();
+
+if (!in_array('admin-usuarios', $visibleModules)) {
+    http_response_code(403);
+    echo "<h1>403</h1><p>No tienes acceso</p>";
+    return;
+}
 
 $pdo = db();
 $error = null;

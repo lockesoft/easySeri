@@ -109,13 +109,16 @@ Antes de integrar aplicaciones reales, se completa toda la base común del siste
 ---
 
 ## 🧩 6.3 Roles y permisos
-- [ ] Listado de roles
-- [ ] Crear rol
-- [ ] Editar rol
-- [ ] Asignar permisos a roles
-- [ ] Permisos por módulo (`modulo.access`)
+- [x ] Listado de roles
+- [ x] Crear rol
+- [ x] Editar rol
+- [ x] Asignar permisos a roles
+- [ x] Permisos por módulo (`modulo.access`)
 
 ---
+## 🔐 6.3-2 Seguridad básica
+- [x] Protección de rutas por permisos
+- [x] Validación de acceso en módulos internos
 
 ## ⚙️ 6.4 Gestión de módulos
 - [ ] Listado de módulos instalados
