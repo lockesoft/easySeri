@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'title' => 'Usuarios',
-    'route' => '/admin-usuarios',
-    'icon' => 'users',
-    'order' => 10,
-    'permission' => 'admin-usuarios.access',
+    'title' => 'Bienvenida',
+    'route' => '/welcome',
+    'icon' => 'home',
+    'order' => 1,
+    'permission' => 'welcome.access',
 ];
