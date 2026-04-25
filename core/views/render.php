@@ -9,7 +9,7 @@ function renderLayout(string $content): void
     $menuBuilder = new ModuleMenuBuilder();
     $menu = $menuBuilder->getMenuForCurrentUser();
 
-    // detectar ruta actual
+    $basePath = '/easyseri';
     $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
     require __DIR__ . '/layout.php';

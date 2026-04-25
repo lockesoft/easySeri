@@ -67,7 +67,11 @@
     <strong>easySeri</strong>
     <div class="user-box">
         Usuario: <?= htmlspecialchars($user['name'] ?? 'Invitado') ?>
+        <a href="<?= htmlspecialchars($basePath . '/logout') ?>" style="color:white;">
+    Cerrar sesión
+</a>
     </div>
+    
 </div>
 
 <div class="wrapper">
@@ -75,12 +79,12 @@
         <h3>Módulos</h3>
 
 <?php foreach ($menu as $item): 
-    $isActive = ($currentPath === $item['route']);
+    $isActive = ($currentPath === $basePath . $item['route']);
 ?>
-    <a href="<?= htmlspecialchars($item['route']) ?>"
-       style="<?= $isActive ? 'background:#1f2937;font-weight:bold;' : '' ?>">
-        <?= htmlspecialchars($item['title']) ?>
-    </a>
+<a href="<?= htmlspecialchars($basePath . $item['route']) ?>"
+   style="<?= $isActive ? 'background:#1f2937;font-weight:bold;' : '' ?>">
+    <?= htmlspecialchars($item['title']) ?>
+</a>
 <?php endforeach; ?>
     </div>
 

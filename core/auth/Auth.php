@@ -48,8 +48,7 @@ class Auth
             return false;
         }
 
-        // temporal: comparación simple (luego bcrypt)
-        if ($user['password_hash'] !== $password) {
+        if (!password_verify($password, $user['password_hash'])) {
             return false;
         }
 

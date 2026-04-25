@@ -48,6 +48,11 @@ $router->get('/', function () use ($basePath) {
     header('Location: ' . $basePath . '/welcome');
     exit;
 });
+$router->get('/logout', function () use ($basePath) {
+    Auth::logout();
+    header('Location: ' . $basePath . '/login');
+    exit;
+});
 ///////////////////////modulos/////////////////
 $router->get('/welcome', function () {
     $manager = new ModuleManager();
