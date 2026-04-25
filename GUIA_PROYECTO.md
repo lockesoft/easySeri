@@ -121,9 +121,9 @@ Antes de integrar aplicaciones reales, se completa toda la base común del siste
 - [x] Validación de acceso en módulos internos
 
 ## ⚙️ 6.4 Gestión de módulos
-- [ ] Listado de módulos instalados
-- [ ] Activar/desactivar módulos
-- [ ] Ver estado y versión
+- [x ] Listado de módulos instalados
+- [ x] Activar/desactivar módulos
+- [x ] Ver estado y versión
 - [ ] Preparar dependencias futuras
 
 ---

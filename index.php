@@ -132,6 +132,19 @@ $router->post('/admin-roles/editar', function () {
     require __DIR__ . '/modules/admin-roles/editar.php';
     renderLayout($content);
 });
+$router->get('/admin-modulos', function () {
+    $manager = new ModuleManager();
+    $visibleModules = $manager->getVisibleModulesForUser();
+
+    if (!in_array('admin-modulos', $visibleModules)) {
+        http_response_code(403);
+        renderLayout('<h1>403</h1><p>No tienes acceso</p>');
+        return;
+    }
+
+    require __DIR__ . '/modules/admin-modulos/index.php';
+    renderLayout($content);
+});
 
 
 
