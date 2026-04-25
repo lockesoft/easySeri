@@ -81,4 +81,17 @@ $router->get('/admin-usuarios', function () {
     require __DIR__ . '/modules/admin-usuarios/index.php';
     renderLayout($content);
 });
+$router->get('/admin-usuarios/crear', function () {
+    require __DIR__ . '/modules/admin-usuarios/crear.php';
+    renderLayout($content);
+});
+
+$router->post('/admin-usuarios/crear', function () {
+    require __DIR__ . '/modules/admin-usuarios/crear.php';
+    renderLayout($content);
+});
+
+
+
+
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

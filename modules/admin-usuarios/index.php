@@ -12,6 +12,9 @@ ob_start();
 
 <h1>Gestión de usuarios</h1>
 
+<a href="/easyseri/admin-usuarios/crear">Crear usuario</a>
+<br><br>
+
 <table border="1" cellpadding="10" cellspacing="0">
     <tr>
         <th>ID</th>
