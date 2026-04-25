@@ -15,15 +15,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $pdo->prepare("
-            INSERT INTO core_users (name, email, password_hash, is_active)
-            VALUES (?, ?, ?, 1)
-        ");
+$stmtCheck = $pdo->prepare("SELECT id FROM core_users WHERE email = ?");
+$stmtCheck->execute([$email]);
 
-        $stmt->execute([$name, $email, $hash]);
+if ($stmtCheck->fetch()) {
+    $error = "Ya existe un usuario con ese email";
+} else {
+    $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        header('Location: /easyseri/admin-usuarios');
-        exit;
+    $stmt = $pdo->prepare("
+        INSERT INTO core_users (name, email, password_hash, is_active)
+        VALUES (?, ?, ?, 1)
+    ");
+
+    $stmt->execute([$name, $email, $hash]);
+
+    header('Location: /easyseri/admin-usuarios?msg=created');
+    exit;
+}
     }
 }
 

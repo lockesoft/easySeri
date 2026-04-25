@@ -24,6 +24,14 @@ ob_start();
 
 <h1>Gestión de roles</h1>
 
+<?php if (($_GET['msg'] ?? '') === 'created'): ?>
+    <p style="color:green;">Rol creado correctamente.</p>
+<?php endif; ?>
+
+<?php if (($_GET['msg'] ?? '') === 'updated'): ?>
+    <p style="color:green;">Rol actualizado correctamente.</p>
+<?php endif; ?>
+
 <a href="/easyseri/admin-roles/crear">Crear rol</a>
 <br><br>
 

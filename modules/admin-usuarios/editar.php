@@ -10,14 +10,6 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $stmt = $pdo->prepare("SELECT * FROM core_users WHERE id = ?");
 $stmt->execute([$id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
-// Cargar todos los roles disponibles
-$stmtRoles = $pdo->query("SELECT id, name, description FROM core_roles ORDER BY name ASC");
-$roles = $stmtRoles->fetchAll(PDO::FETCH_ASSOC);
-
-// Cargar roles actuales del usuario
-$stmtUserRoles = $pdo->prepare("SELECT role_id FROM core_user_roles WHERE user_id = ?");
-$stmtUserRoles->execute([$id]);
-$userRoleIds = $stmtUserRoles->fetchAll(PDO::FETCH_COLUMN);
 
 if (!$user) {
     ob_start();
@@ -25,6 +17,13 @@ if (!$user) {
     $content = ob_get_clean();
     return;
 }
+
+$stmtRoles = $pdo->query("SELECT id, name, description FROM core_roles ORDER BY name ASC");
+$roles = $stmtRoles->fetchAll(PDO::FETCH_ASSOC);
+
+$stmtUserRoles = $pdo->prepare("SELECT role_id FROM core_user_roles WHERE user_id = ?");
+$stmtUserRoles->execute([$id]);
+$userRoleIds = $stmtUserRoles->fetchAll(PDO::FETCH_COLUMN);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
@@ -35,39 +34,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($name === '' || $email === '') {
         $error = "Nombre y email son obligatorios";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "El email no tiene un formato válido";
     } else {
-        if ($password !== '') {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
+        $stmtCheck = $pdo->prepare("SELECT id FROM core_users WHERE email = ? AND id <> ?");
+        $stmtCheck->execute([$email, $id]);
 
-            $stmt = $pdo->prepare("
-                UPDATE core_users
-                SET name = ?, email = ?, is_active = ?, password_hash = ?
-                WHERE id = ?
-            ");
-
-            $stmt->execute([$name, $email, $isActive, $hash, $id]);
+        if ($stmtCheck->fetch()) {
+            $error = "Ya existe otro usuario con ese email";
         } else {
-            $stmt = $pdo->prepare("
-                UPDATE core_users
-                SET name = ?, email = ?, is_active = ?
-                WHERE id = ?
-            ");
+            if ($password !== '') {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
 
-            $stmt->execute([$name, $email, $isActive, $id]);
-        }
-        // Actualizar roles del usuario
-        $stmt = $pdo->prepare("DELETE FROM core_user_roles WHERE user_id = ?");
-        $stmt->execute([$id]);
+                $stmt = $pdo->prepare("
+                    UPDATE core_users
+                    SET name = ?, email = ?, is_active = ?, password_hash = ?
+                    WHERE id = ?
+                ");
 
-        if (!empty($selectedRoles)) {
-            $stmt = $pdo->prepare("INSERT INTO core_user_roles (user_id, role_id) VALUES (?, ?)");
+                $stmt->execute([$name, $email, $isActive, $hash, $id]);
+            } else {
+                $stmt = $pdo->prepare("
+                    UPDATE core_users
+                    SET name = ?, email = ?, is_active = ?
+                    WHERE id = ?
+                ");
 
-            foreach ($selectedRoles as $roleId) {
-                $stmt->execute([$id, (int)$roleId]);
+                $stmt->execute([$name, $email, $isActive, $id]);
             }
+
+            $stmt = $pdo->prepare("DELETE FROM core_user_roles WHERE user_id = ?");
+            $stmt->execute([$id]);
+
+            if (!empty($selectedRoles)) {
+                $stmt = $pdo->prepare("INSERT INTO core_user_roles (user_id, role_id) VALUES (?, ?)");
+
+                foreach ($selectedRoles as $roleId) {
+                    $stmt->execute([$id, (int)$roleId]);
+                }
+            }
+
+            header('Location: /easyseri/admin-usuarios?msg=updated');
+            exit;
         }
-        header('Location: /easyseri/admin-usuarios');
-        exit;
     }
 }
 
@@ -82,13 +91,13 @@ ob_start();
 
 <form method="POST">
     <label>Nombre</label><br>
-    <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>"><br><br>
+    <input type="text" name="name" value="<?= htmlspecialchars($_POST['name'] ?? $user['name']) ?>"><br><br>
 
     <label>Email</label><br>
-    <input type="text" name="email" value="<?= htmlspecialchars($user['email']) ?>"><br><br>
+    <input type="text" name="email" value="<?= htmlspecialchars($_POST['email'] ?? $user['email']) ?>"><br><br>
 
     <label>
-        <input type="checkbox" name="is_active" <?= $user['is_active'] ? 'checked' : '' ?>>
+        <input type="checkbox" name="is_active" <?= (isset($_POST['is_active']) || (!$_POST && $user['is_active'])) ? 'checked' : '' ?>>
         Usuario activo
     </label>
 
@@ -99,6 +108,7 @@ ob_start();
     <p style="color:#666;font-size:13px;">
         Deja este campo vacío si no quieres cambiar la contraseña.
     </p>
+
     <h3>Roles</h3>
 
     <?php foreach ($roles as $role): ?>
@@ -120,6 +130,7 @@ ob_start();
     <?php endforeach; ?>
 
     <br>
+
     <button type="submit">Guardar cambios</button>
     <a href="/easyseri/admin-usuarios">Cancelar</a>
 </form>

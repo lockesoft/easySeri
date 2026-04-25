@@ -24,6 +24,14 @@ ob_start();
 
 <h1>Gestión de usuarios</h1>
 
+<?php if (($_GET['msg'] ?? '') === 'created'): ?>
+    <p style="color:green;">Usuario creado correctamente.</p>
+<?php endif; ?>
+
+<?php if (($_GET['msg'] ?? '') === 'updated'): ?>
+    <p style="color:green;">Usuario actualizado correctamente.</p>
+<?php endif; ?>
+
 <a href="/easyseri/admin-usuarios/crear">Crear usuario</a>
 <br><br>
 

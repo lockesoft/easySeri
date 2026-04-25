@@ -19,27 +19,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $error = "El nombre del rol es obligatorio";
     } else {
-        $stmt = $pdo->prepare("
-            INSERT INTO core_roles (name, description)
-            VALUES (?, ?)
-        ");
-        $stmt->execute([$name, $description]);
+        $stmtCheck = $pdo->prepare("SELECT id FROM core_roles WHERE name = ?");
+        $stmtCheck->execute([$name]);
 
-        $roleId = $pdo->lastInsertId();
-
-        if (!empty($selectedPermissions)) {
+        if ($stmtCheck->fetch()) {
+            $error = "Ya existe un rol con ese nombre";
+        } else {
             $stmt = $pdo->prepare("
-                INSERT INTO core_role_permissions (role_id, permission_id)
+                INSERT INTO core_roles (name, description)
                 VALUES (?, ?)
             ");
+            $stmt->execute([$name, $description]);
 
-            foreach ($selectedPermissions as $permissionId) {
-                $stmt->execute([$roleId, (int)$permissionId]);
+            $roleId = $pdo->lastInsertId();
+
+            if (!empty($selectedPermissions)) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO core_role_permissions (role_id, permission_id)
+                    VALUES (?, ?)
+                ");
+
+                foreach ($selectedPermissions as $permissionId) {
+                    $stmt->execute([$roleId, (int)$permissionId]);
+                }
             }
-        }
 
-        header('Location: /easyseri/admin-roles');
-        exit;
+            header('Location: /easyseri/admin-roles?msg=created');
+            exit;
+        }
     }
 }
 
@@ -54,10 +61,10 @@ ob_start();
 
 <form method="POST">
     <label>Nombre del rol</label><br>
-    <input type="text" name="name"><br><br>
+    <input type="text" name="name" value="<?= htmlspecialchars($_POST['name'] ?? '') ?>"><br><br>
 
     <label>Descripción</label><br>
-    <input type="text" name="description"><br><br>
+    <input type="text" name="description" value="<?= htmlspecialchars($_POST['description'] ?? '') ?>"><br><br>
 
     <h3>Permisos / módulos</h3>
 

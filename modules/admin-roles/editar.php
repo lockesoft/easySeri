@@ -40,29 +40,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $error = "El nombre del rol es obligatorio";
     } else {
-        $stmt = $pdo->prepare("
-            UPDATE core_roles
-            SET name = ?, description = ?
-            WHERE id = ?
-        ");
-        $stmt->execute([$name, $description, $id]);
+        $stmtCheck = $pdo->prepare("SELECT id FROM core_roles WHERE name = ? AND id <> ?");
+        $stmtCheck->execute([$name, $id]);
 
-        $stmt = $pdo->prepare("DELETE FROM core_role_permissions WHERE role_id = ?");
-        $stmt->execute([$id]);
-
-        if (!empty($selectedPermissions)) {
+        if ($stmtCheck->fetch()) {
+            $error = "Ya existe otro rol con ese nombre";
+        } else {
             $stmt = $pdo->prepare("
-                INSERT INTO core_role_permissions (role_id, permission_id)
-                VALUES (?, ?)
+                UPDATE core_roles
+                SET name = ?, description = ?
+                WHERE id = ?
             ");
+            $stmt->execute([$name, $description, $id]);
 
-            foreach ($selectedPermissions as $permissionId) {
-                $stmt->execute([$id, (int)$permissionId]);
+            $stmt = $pdo->prepare("DELETE FROM core_role_permissions WHERE role_id = ?");
+            $stmt->execute([$id]);
+
+            if (!empty($selectedPermissions)) {
+                $stmt = $pdo->prepare("
+                    INSERT INTO core_role_permissions (role_id, permission_id)
+                    VALUES (?, ?)
+                ");
+
+                foreach ($selectedPermissions as $permissionId) {
+                    $stmt->execute([$id, (int)$permissionId]);
+                }
             }
-        }
 
-        header('Location: /easyseri/admin-roles');
-        exit;
+            header('Location: /easyseri/admin-roles?msg=updated');
+            exit;
+        }
     }
 }
 
@@ -77,10 +84,10 @@ ob_start();
 
 <form method="POST">
     <label>Nombre del rol</label><br>
-    <input type="text" name="name" value="<?= htmlspecialchars($role['name']) ?>"><br><br>
+    <input type="text" name="name" value="<?= htmlspecialchars($_POST['name'] ?? $role['name']) ?>"><br><br>
 
     <label>Descripción</label><br>
-    <input type="text" name="description" value="<?= htmlspecialchars($role['description'] ?? '') ?>"><br><br>
+    <input type="text" name="description" value="<?= htmlspecialchars($_POST['description'] ?? ($role['description'] ?? '')) ?>"><br><br>
 
     <h3>Permisos / módulos</h3>
 
