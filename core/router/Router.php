@@ -12,7 +12,17 @@ class Router
 
     public function get($path, $handler)
     {
-        $this->routes['GET'][$this->normalize($path)] = $handler;
+        $this->addRoute('GET', $path, $handler);
+    }
+
+    public function post($path, $handler)
+    {
+        $this->addRoute('POST', $path, $handler);
+    }
+
+    private function addRoute($method, $path, $handler)
+    {
+        $this->routes[strtoupper($method)][$this->normalize($path)] = $handler;
     }
 
     public function dispatch($uri, $method = 'GET')

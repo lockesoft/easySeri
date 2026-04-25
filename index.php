@@ -40,6 +40,10 @@ $router->get('/login', function () {
     renderLayout($content);
 });
 
+$router->post('/login', function () {
+    require __DIR__ . '/modules/auth-login/index.php';
+    renderLayout($content);
+});
 $router->get('/', function () use ($basePath) {
     header('Location: ' . $basePath . '/welcome');
     exit;
