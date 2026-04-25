@@ -218,6 +218,7 @@ Todo módulo debe tener:
 - Primero simple, luego potente
 - Modular siempre
 - Evitar dependencias ocultas
+- Todo el codigo bien comentado para que quede claro a posteriori lo lea quien lo lea
 
 ---
 

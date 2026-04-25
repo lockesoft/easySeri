@@ -99,6 +99,39 @@ $router->post('/admin-usuarios/editar', function () {
     require __DIR__ . '/modules/admin-usuarios/editar.php';
     renderLayout($content);
 });
+$router->get('/admin-roles', function () {
+    $manager = new ModuleManager();
+    $visibleModules = $manager->getVisibleModulesForUser();
+
+    if (!in_array('admin-roles', $visibleModules)) {
+        http_response_code(403);
+        renderLayout('<h1>403</h1><p>No tienes acceso</p>');
+        return;
+    }
+
+    require __DIR__ . '/modules/admin-roles/index.php';
+    renderLayout($content);
+});
+
+$router->get('/admin-roles/crear', function () {
+    require __DIR__ . '/modules/admin-roles/crear.php';
+    renderLayout($content);
+});
+
+$router->post('/admin-roles/crear', function () {
+    require __DIR__ . '/modules/admin-roles/crear.php';
+    renderLayout($content);
+});
+
+$router->get('/admin-roles/editar', function () {
+    require __DIR__ . '/modules/admin-roles/editar.php';
+    renderLayout($content);
+});
+
+$router->post('/admin-roles/editar', function () {
+    require __DIR__ . '/modules/admin-roles/editar.php';
+    renderLayout($content);
+});
 
 
 
