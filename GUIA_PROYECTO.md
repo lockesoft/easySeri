@@ -88,18 +88,18 @@ Antes de integrar aplicaciones reales, se completa toda la base común del siste
 # 📍 FASE 6 — CORE ADMINISTRATIVO
 
 ## 🔐 6.1 Login y sesión
-- [ ] Formulario de login
-- [ ] Validación de usuario
-- [ ] Password hash (bcrypt)
-- [ ] Sesión PHP
-- [ ] Logout
-- [ ] Protección de rutas
-- [ ] Redirección automática si no autenticado
+- [ x] Formulario de login
+- [ x] Validación de usuario
+- [x ] Password hash (bcrypt)
+- [ x] Sesión PHP
+- [ x] Logout
+- [ x] Protección de rutas
+- [ x] Redirección automática si no autenticado
 
 ---
 
 ## 👤 6.2 Gestión de usuarios
-- [ ] Listado de usuarios
+- [x ] Listado de usuarios
 - [ ] Crear usuario
 - [ ] Editar usuario
 - [ ] Activar/desactivar usuario
