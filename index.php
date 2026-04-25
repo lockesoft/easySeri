@@ -20,6 +20,12 @@ $basePath = '/easyseri';
 
 $router = new Router($basePath);
 
+
+$router->get('/login', function () {
+    require __DIR__ . '/modules/auth-login/index.php';
+    renderLayout($content);
+});
+
 $router->get('/', function () use ($basePath) {
     header('Location: ' . $basePath . '/welcome');
     exit;
@@ -38,5 +44,12 @@ $router->get('/welcome', function () {
     require __DIR__ . '/modules/welcome/index.php';
     renderLayout($content);
 });
+
+require_once __DIR__ . '/core/auth/Auth.php';
+
+if (!Auth::check()) {
+    header('Location: /easyseri/login');
+    exit;
+}
 
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
