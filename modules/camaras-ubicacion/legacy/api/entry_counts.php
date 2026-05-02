@@ -18,7 +18,9 @@ try{
   if ($entrada==='') out(false, ['error'=>'Falta entrada_num'], 400);
 
   // total en espejo ERP
-  $st = db()->prepare("SELECT COUNT(*) FROM erp_palets_mirror WHERE entrada_num=?");
+  $db = camaras_db();
+
+  $st = $db->prepare("SELECT COUNT(*) FROM erp_palets_mirror WHERE entrada_num=?");
   $st->bind_param('s', $entrada);
   $st->execute(); $st->bind_result($total); $st->fetch(); $st->close();
   $total = (int)$total;
@@ -26,7 +28,7 @@ try{
   if ($total===0) out(false, ['error'=>'Entrada no encontrada o sin palets en espejo ERP'], 404);
 
   // ubicados activos
-  $st2 = db()->prepare("SELECT COUNT(*) FROM placements WHERE entrada_num=? AND removed_at IS NULL");
+  $st2 = $db->prepare("SELECT COUNT(*) FROM placements WHERE entrada_num=? AND removed_at IS NULL");
   $st2->bind_param('s', $entrada);
   $st2->execute(); $st2->bind_result($placed); $st2->fetch(); $st2->close();
   $placed = (int)$placed;
