@@ -10,10 +10,10 @@ require_login();
 header_remove('X-Powered-By');
 header('Content-Type: application/json; charset=utf-8');
 
-if (!function_exists('db')) {
-  function db(): mysqli {
+if (!function_exists('camaras_db')) {
+  function camaras_db(): mysqli {
     global $mysqli;
-    if (!$mysqli instanceof mysqli) throw new RuntimeException('DB no inicializada');
+    if (!$mysqli instanceof mysqli) throw new RuntimeException('DB cámaras no inicializada');
     return $mysqli;
   }
 }
@@ -118,7 +118,8 @@ try {
   $code = norm_str($code);
   if ($code==='') out(false, ['error'=>'Falta parámetro code'], 400);
 
-  $db = db(); $db->set_charset('utf8mb4');
+  $db = camaras_db(); 
+$db->set_charset('utf8mb4');
   $cands = build_candidates($code);
   if (empty($cands)) out(false, ['error'=>'Código inválido'], 200);
 

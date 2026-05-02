@@ -27,4 +27,13 @@ if (!function_exists('db')) {
     global $mysqli;
     return $mysqli;
   }
+    if (!function_exists('camaras_db')) {
+  function camaras_db(): mysqli {
+    global $mysqli;
+    return $mysqli;
+  }
+}
+
+
+
 }
