@@ -29,7 +29,7 @@ function camaras_load_env_once(): void
     foreach ($lines as $line) {
         $line = trim($line);
 
-        if ($line === '' || str_starts_with($line, '#') || strpos($line, '=') === false) {
+        if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
             continue;
         }
 
