@@ -1,8 +1,8 @@
 <?php
 // /public/api/entry_counts.php
 declare(strict_types=1);
-require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/auth.php';
 require_login();
 header_remove('X-Powered-By');
 header('Content-Type: application/json; charset=utf-8');
