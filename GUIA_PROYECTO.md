@@ -324,7 +324,7 @@ Concretamente:
 
 1. Arreglar user_id
 2. Arreglar moves_log
-3. Arreglar lógica pendientes sync
+3. Arreglar lógica pendientes sync 
 
 # 📍 FASE 8 — EVOLUCIÓN DE MÓDULOS
 
