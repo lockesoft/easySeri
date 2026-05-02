@@ -158,7 +158,19 @@ $router->get('/camaras-ubicacion', function () {
     require __DIR__ . '/modules/camaras-ubicacion/index.php';
     renderLayout($content);
 });
+$router->get('/camaras-ubicacion/scan', function () {
+    $manager = new ModuleManager();
+    $visibleModules = $manager->getVisibleModulesForUser();
 
+    if (!in_array('camaras-ubicacion', $visibleModules)) {
+        http_response_code(403);
+        renderLayout('<h1>403</h1><p>No tienes acceso</p>');
+        return;
+    }
+
+    require __DIR__ . '/modules/camaras-ubicacion/scan.php';
+    renderLayout($content);
+});
 
 
 
