@@ -62,7 +62,9 @@ try{
   if ($camera_id<=0) out(false, ['error'=>'camera_id inválido'], 400);
 
   // Filas reales
-  $st = db()->prepare("SELECT id, label FROM camera_row_groups WHERE camera_id=? ORDER BY order_index ASC, id ASC");
+  $db = camaras_db();
+
+$st = $db->prepare("SELECT id, label FROM camera_row_groups WHERE camera_id=? ORDER BY order_index ASC, id ASC");
   $st->bind_param('i', $camera_id);
   $st->execute();
   $groups = $st->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -70,7 +72,7 @@ try{
 
   $out = [];
   foreach ($groups as $g){
-    $free = free_slots_of_group(db(), $camera_id, (int)$g['id']);
+    $free = free_slots_of_group($db, $camera_id, (int)$g['id']);
     $out[] = [
       'row_group_id' => (int)$g['id'],
       'label'        => $g['label'],

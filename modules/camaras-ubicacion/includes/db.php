@@ -31,14 +31,7 @@ function db_query(mysqli $mysqli, string $sql, string $types = '', array $params
     return $stmt;
 }
 
-// Compatibilidad con app antigua si el core NO ha definido db()
-if (!function_exists('db')) {
-    function db(): mysqli
-    {
-        global $mysqli;
-        return $mysqli;
-    }
-}
+
 
 // Función propia del módulo cámaras para evitar conflicto con db() del core easySeri
 if (!function_exists('camaras_db')) {

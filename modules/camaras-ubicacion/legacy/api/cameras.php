@@ -14,7 +14,9 @@ function out($ok, $data=[], $code=200){
 }
 
 try{
-  $rows = db()->query("SELECT id, name, priority FROM cameras ORDER BY priority DESC, id ASC")->fetch_all(MYSQLI_ASSOC);
+ $rows = camaras_db()
+    ->query("SELECT id, name, priority FROM cameras ORDER BY priority DESC, id ASC")
+    ->fetch_all(MYSQLI_ASSOC);
   out(true, ['cameras'=>$rows]);
 }catch(Throwable $e){
   out(false, ['error'=>$e->getMessage()], 500);
