@@ -1,8 +1,31 @@
 # 🧭 GUÍA DEL PROYECTO - easySeri
 
-## 🎯 OBJETIVO
+---
 
-Construir una plataforma modular única (easySeri) que unifique todas las aplicaciones existentes en un solo sistema, con control de usuarios, permisos y módulos activables/desactivables.
+# 🧭 ESTADO ACTUAL EN VIVO
+
+FASE ACTUAL: FASE 1 — SANEAMIENTO (camaras-ubicacion)
+
+ESTADO REAL:
+
+✔ Fix user_id → COMPLETADO  
+✔ Fix lógica sync_sap (pendientes reales) → COMPLETADO  
+⏸ moves_log → CONGELADO (pendiente futuro)  
+⏸ pruebas reales → PENDIENTE (no en planta)  
+
+SIGUIENTE PASO:
+→ Crear módulo camaras-ubicacion en easySeri (FASE 2)
+
+---
+
+# 🎯 OBJETIVO
+
+Construir una plataforma modular única (easySeri) que unifique todas las aplicaciones existentes en un solo sistema, con:
+
+- Control de usuarios
+- Sistema de permisos
+- Módulos independientes
+- Activación/desactivación dinámica
 
 ---
 
@@ -17,401 +40,275 @@ Construir una plataforma modular única (easySeri) que unifique todas las aplica
 
 ---
 
-# 📊 ESTADO ACTUAL DEL PROYECTO
+# 📊 ESTADO GLOBAL DEL PROYECTO
 
-## ✅ FASE 0 — Base del proyecto
-- [x] Estructura de carpetas
-- [x] Proyecto local inicial
-- [x] Repositorio Git creado
-- [x] Subida a GitHub
-- [x] `.gitignore` configurado
-- [x] `.env` protegido
+## ✅ FASE 0 — Base
+- [x] Estructura
+- [x] Repo Git
+- [x] GitHub
+- [x] .gitignore
+- [x] .env
 
 ---
 
 ## ✅ FASE 1 — Core técnico
-- [x] Conexión a base de datos
-- [x] Tabla `core_modules`
-- [x] Module Manager
-- [x] Lectura de módulos desde `/modules`
-- [x] Sincronización con BD
-- [x] Activación/desactivación de módulos
+- [x] DB
+- [x] core_modules
+- [x] ModuleManager
+- [x] Sync módulos
+- [x] Activación módulos
 
 ---
 
-## ✅ FASE 2 — Sistema de permisos
-- [x] Tabla `core_users`
-- [x] Tabla `core_roles`
-- [x] Tabla `core_permissions`
-- [x] Relaciones (`user_roles`, `role_permissions`)
-- [x] Auth básico (simulado)
+## ✅ FASE 2 — Permisos
+- [x] core_users
+- [x] core_roles
+- [x] core_permissions
+- [x] Relaciones
+- [x] Auth
 - [x] PermissionService
-- [x] Control de acceso por módulo
 
 ---
 
-## ✅ FASE 3 — Router y Layout
-- [x] Router funcional
-- [x] Soporte basePath
-- [x] Layout base
-- [x] Render con `$content`
+## ✅ FASE 3 — Router/Layout
+- [x] Router
+- [x] basePath
+- [x] Layout
+- [x] Render
 - [x] Menú dinámico
-- [x] Filtro por permisos
 
 ---
 
-## ✅ FASE 4 — Módulo de prueba
-- [x] Módulo `welcome`
-- [x] `module.json`
-- [x] `menu.php`
-- [x] `index.php`
-- [x] Ruta `/welcome`
-- [x] Render dentro del layout
+## ✅ FASE 4 — Módulo prueba
+- [x] welcome
 
 ---
 
-## ✅ FASE 5 — UX inicial
+## ✅ FASE 5 — UX
 - [x] Menú dinámico
-- [x] Módulo activo resaltado
-- [x] Usuario visible en layout
+- [x] Usuario visible
 
 ---
 
-# 🚧 FASE ACTUAL
-
-👉 CONSOLIDACIÓN DEL CORE ADMINISTRATIVO
-
-Antes de integrar aplicaciones reales, se completa toda la base común del sistema.
+## 🟡 FASE 6 — Core administrativo
+(REALMENTE YA TERMINADO EN PRÁCTICA)
 
 ---
 
-# 📍 FASE 6 — CORE ADMINISTRATIVO
-
-## 🔐 6.1 Login y sesión
-- [ x] Formulario de login
-- [ x] Validación de usuario
-- [x ] Password hash (bcrypt)
-- [ x] Sesión PHP
-- [ x] Logout
-- [ x] Protección de rutas
-- [ x] Redirección automática si no autenticado
+# 🚀 FASE 7 — MÓDULO REAL: CAMARAS-UBICACION
 
 ---
 
-## 👤 6.2 Gestión de usuarios
-- [x ] Listado de usuarios
-- [x ] Crear usuario
-- [ x] Editar usuario
-- [ x] Activar/desactivar usuario
-- [ x] Asignar roles
-- [ x] Cambio de contraseña
+## 📘 DOCUMENTO MAESTRO — CAMARAS-UBICACION
+
+### 🎯 OBJETIVO
+
+Sistema real de:
+
+- Escaneo de palets
+- Ubicación en cámaras
+- Integración ERP
+- Movimientos
+- Control físico de almacén
 
 ---
 
-## 🧩 6.3 Roles y permisos
-- [x ] Listado de roles
-- [ x] Crear rol
-- [ x] Editar rol
-- [ x] Asignar permisos a roles
-- [ x] Permisos por módulo (`modulo.access`)
+## 🧠 ARQUITECTURA
 
----
-## 🔐 6.3-2 Seguridad básica
-- [x] Protección de rutas por permisos
-- [x] Validación de acceso en módulos internos
-
-## ⚙️ 6.4 Gestión de módulos
-- [x ] Listado de módulos instalados
-- [ x] Activar/desactivar módulos
-- [x ] Ver estado y versión
-- [ ] Preparar dependencias futuras
+### Flujo principal
+ESCANEO
+→ lookup ERP mirror
+→ entrada
+→ pendientes
+→ sugerencia ubicación
+→ confirmación
+→ placement
 
 ---
 
-## 🧭 6.5 Panel administrativo
-- [ ] Módulo `admin-usuarios`
-- [ ] Módulo `admin-roles`
-- [ ] Módulo `admin-modulos`
-- [ ] Acceso solo admin
-- [ ] Navegación interna
+### Flujo SAP
+SAP (sin internet)
+→ SQL Server
+→ sync_sap.php
+→ MariaDB
+→ easySeri
+
+⚠️ Nunca conectar easySeri directamente a SAP
 
 ---
 
-# 📍 FASE 7 — PRIMER MÓDULO REAL
- Añado nuevo orden y documento amestro para la parte especial de camaras
-📘 DOCUMENTO MAESTRO — MÓDULO CAMARAS-UBICACION (easySeri)
-📍 Estado general del proyecto
-PROYECTO: easySeri
-MÓDULO: camaras-ubicacion
-ESTADO: Fase 0 — Auditoría completada / Inicio integración
-🎯 OBJETIVO DEL MÓDULO
+## 🗃️ BASE DE DATOS
 
-Sistema de ubicación de palets en cámaras frigoríficas con:
+### Configuración
+- cameras
+- camera_positions
+- camera_row_groups
+- camera_row_cells
 
-✔ Escaneo con lector de códigos (ZXing)
-✔ Integración con ERP (SAP vía SQL Server → mirror MariaDB)
-✔ Ubicación automática por capacidad
-✔ Control de duplicados
-✔ Movimientos de palets / entradas
-✔ Gestión de cámaras físicas
-✔ Sistema simple para operarios (modo kiosco)
-🧠 ARQUITECTURA GENERAL
-Flujo principal
-ESCANEO PALLET
-→ lookup en erp_palets_mirror
-→ obtener entrada
-→ calcular pendientes
-→ sugerir cámara/fila
-→ confirmar ubicación
-→ guardar en placements
-→ registrar en moves_log
-Flujo de datos ERP
-SERVIDOR SAP (SIN INTERNET)
-↓ ODBC
-SQL SERVER (SERIFRUIT)
-↓ sync_sap.php
-MariaDB (ubicacion)
-↓
-easySeri (lectura local)
+### Ubicación
+- placements
+- moves_log
 
-⚠️ Importante:
+### ERP mirror
+- erp_entradas_mirror
+- erp_palets_mirror
+- erp_plegados_mirror
+- erp_entries_pending
 
-easySeri NO accede directamente a SAP
+---
 
-🗃️ BASE DE DATOS (ACTUAL)
-Configuración física
-cameras
-camera_positions
-camera_row_groups
-camera_row_cells
-camera_conditions
-Ubicación real
-placements
-moves_log
-Datos espejo ERP
-erp_entradas_mirror
-erp_palets_mirror
-erp_plegados_mirror
-erp_entries_pending
-erp_entries_suppressed
-⚠️ A ELIMINAR
-users (NO se usará — sustituido por core_users)
-⚠️ PROBLEMAS DETECTADOS (CRÍTICOS)
-🔴 1. user_id incorrecto
-$_SESSION['user']['id'] vs $_SESSION['user_id']
+## ⚠️ PROBLEMAS DETECTADOS
 
-➡ placements puede estar guardando NULL
+### ✔ 1. user_id incorrecto → SOLUCIONADO
 
-🔴 2. moves_log inconsistente
-ENUM:
-move_row
-move_entry
-move_pallet
+Antes:$_SESSION['user_id']
+ahora: $_SESSION['user']['id']
 
-Pero el código usa:
+---
 
-scan_case1
-scan_case2
+### ✔ 2. sync_sap incorrecto → SOLUCIONADO
 
-➡ riesgo de fallo silencioso
-
-🔴 3. sync_sap lógica incorrecta
-Si existe 1 placement → marca entrada completa
-
-➡ INCORRECTO
-
-Debe ser:
-
-placed = COUNT placements
+Antes:si existe 1 placement → entrada completa
+Ahora: placed = COUNT placements activos
 remaining = total - placed
-🔴 4. credenciales en código
-includes/config.php
 
-➡ mover a .env
+⚠️ Compatible con status actual:
+- pending
+- complete
+- stale
 
-🔴 5. endpoints duplicados / incoherentes
-plegado_confirm.php
-plegado_place.php
+---
 
-➡ unificar lógica
+### ⏸ 3. moves_log inconsistente → PENDIENTE
 
-🔴 6. archivos peligrosos en producción
-*_old.php
-*_mock.php
-tools/*
-_selftest_delete.php
+NO TOCAR AÚN
 
-➡ eliminar o proteger
+---
 
-🧩 INTEGRACIÓN CON easySeri
-Estructura del módulo
+### ⚠️ 4. credenciales en código → PENDIENTE
+
+Mover a .env
+
+---
+
+### ⚠️ 5. endpoints duplicados → PENDIENTE
+
+plegado_confirm / plegado_place
+
+---
+
+### ⚠️ 6. archivos inseguros → PENDIENTE
+
+*_old  
+*_mock  
+tools  
+
+---
+
+## 🧩 INTEGRACIÓN EN easySeri
+
+### Estructura módulo
 modules/camaras-ubicacion/
 ├── module.json
 ├── index.php
 ├── scan.php
-├── move.php
-├── admin/
-├── reports/
 ├── api/
 ├── services/
 ├── assets/
-└── legacy/ (temporal)
-Permisos
+
+---
+
+### Permisos
 camaras-ubicacion.access
 camaras-ubicacion.scan
 camaras-ubicacion.move
 camaras-ubicacion.admin
 camaras-ubicacion.reports
-🛠️ PLAN DE DESARROLLO (CHECKLIST)
-🟢 FASE 0 — Auditoría (COMPLETADO)
- Revisar SQL
- Revisar sync_sap.php
- Revisar app completa
- Detectar problemas críticos
-🟡 FASE 1 — Saneamiento (ANTES DE INTEGRAR)
- [x] Corregir user_id
- [] Corregir moves_log
- [] Arreglar lógica de pendientes en sync
- [] Eliminar credenciales hardcode
- [] Limpiar archivos mock/test
- [] Unificar endpoints plegado
-🟡 FASE 2 — Crear módulo en easySeri
- [] Crear carpeta modules/camaras-ubicacion
- [] Crear module.json
- [] Añadir ruta en router
- [] Ver módulo en menú
- [] Proteger con permisos
-🟡 FASE 3 — Integración mínima
- [] Mover scan.php al módulo
- [] Adaptar layout (renderLayout)
- [] Adaptar conexión DB a db()
- [] Eliminar login antiguo
-🟡 FASE 4 — APIs
- [] Migrar scan_lookup
- [] Migrar scan_confirm
- [] Migrar camera_rows
- [] Migrar entry_counts
- [] Validar duplicados
-🟡 FASE 5 — Movimientos
-[]  move_entry
- [] move_pallet
- [] logs correctos
-[] 🟡 FASE 6 — Admin
- [] cámaras
- [] filas
- [] posiciones
-🟡 FASE 7 — Sync SAP
- [] corregir lógica
- [] documentar ejecución
- [] validar volcados
-🟡 FASE 8 — Pruebas reales
- [] escaneo real
- [] duplicados
- [] ubicaciones
- [] movimientos
- [] volcados ERP
-🧠 DECISIONES IMPORTANTES
-✔ NO reescribir desde cero
-✔ Mantener tablas actuales
-✔ Mantener sync_sap externo
-✔ Migración progresiva
-✔ Primero estabilidad, luego refactor
-🚀 SIGUIENTE PASO INMEDIATO
-
-👉 Empezar por FASE 1 — Saneamiento
-
-Concretamente:
-
-1. Arreglar user_id
-2. Arreglar moves_log
-3. Arreglar lógica pendientes sync 
-
-⚠️ PENDIENTE CRÍTICO — moves_log
-
-- ENUM actual no coincide con valores usados en código
-- Posibles registros incorrectos o perdidos
-- NO modificar en producción hasta migración completa
-
-ACCION FUTURA:
-→ Normalizar tipos (scan, move_*, plegado)
-→ Revisar histórico
-
-# 📍 FASE 8 — EVOLUCIÓN DE MÓDULOS
-
-- [ ] Migración progresiva de cámaras al sistema modular
-- [ ] Integración KPI
-- [ ] Integración mantenimiento
-- [ ] Integración ERP
 
 ---
 
-# 📍 FASE 9 — ENTORNO INDUSTRIAL
+## 🛠️ PLAN REAL
 
-- [ ] Rapid Pack
-- [ ] AAF
-- [ ] Node-RED
-- [ ] Eventos en tiempo real
+### 🟢 FASE 0 — Auditoría
+✔ COMPLETADO
 
 ---
 
-# 📏 NORMAS DEL PROYECTO
-
-## 🔒 Seguridad
-- Nunca subir `.env`
-- Nunca subir credenciales
-- Todo dato sensible fuera del repo
+### 🟡 FASE 1 — Saneamiento
+✔ user_id  
+✔ sync_sap  
+⏸ moves_log  
 
 ---
 
-## 🧩 Estructura de módulos
-
-Todo módulo debe tener:
-
-- `module.json`
-- `menu.php`
-- `permissions.php`
-- `index.php`
+### 🟡 FASE 2 — Crear módulo
+- [ ] module.json
+- [ ] ruta
+- [ ] menú
+- [ ] permisos
 
 ---
 
-## 🧠 Core
-
-- No contiene lógica de negocio
-- Solo orquesta módulos
-
----
-
-## 🔗 Dependencias
-
-- Los módulos no dependen entre sí directamente
-- Comunicación solo a través del core o servicios comunes
+### 🟡 FASE 3 — Integración mínima
+- [ ] scan.php dentro módulo
+- [ ] layout core
+- [ ] eliminar login antiguo
 
 ---
 
-# ⚠️ REGLAS CRÍTICAS
-
-1. No romper el core
-2. No mezclar lógica entre módulos
-3. Documentar cambios importantes
-4. Mantener coherencia estructural
-5. Validar antes de escalar
+### 🟡 FASE 4 — APIs
+- [ ] scan_lookup
+- [ ] scan_confirm
+- [ ] camera_rows
 
 ---
 
-# 🧭 FILOSOFÍA
+### 🟡 FASE 5 — Movimientos
+- [ ] move_entry
+- [ ] move_pallet
 
-- Primero estructura, luego funcionalidad
-- Primero simple, luego potente
+---
+
+### 🟡 FASE 6 — Admin
+- [ ] cámaras
+- [ ] filas
+
+---
+
+### 🟡 FASE 7 — Sync SAP
+✔ lógica corregida  
+[ ] documentar  
+[ ] validar  
+
+---
+
+### 🟡 FASE 8 — PRUEBAS
+⏸ pendiente planta
+
+---
+
+# 📏 NORMAS
+
+- No romper core
+- No tocar producción sin control
+- No suponer estructuras
+- Documentar TODO cambio
 - Modular siempre
-- Evitar dependencias ocultas
-- Todo el codigo bien comentado para que quede claro a posteriori lo lea quien lo lea
 
 ---
 
-# 🧠 NOTAS
+# 🧠 FILOSOFÍA
 
-Este documento es la referencia principal del proyecto.
+- Primero estabilidad
+- Luego integración
+- Luego refactor
 
-Debe actualizarse:
-- al completar cada fase
-- antes de iniciar una nueva fase
+---
+
+# 🧭 NOTAS
+
+Este documento es la referencia principal.
+
+Siempre actualizar:
+- al terminar fase
+- antes de empezar la siguiente
