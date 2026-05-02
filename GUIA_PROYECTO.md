@@ -269,47 +269,47 @@ camaras-ubicacion.reports
  Revisar app completa
  Detectar problemas críticos
 🟡 FASE 1 — Saneamiento (ANTES DE INTEGRAR)
- Corregir user_id
- Corregir moves_log
- Arreglar lógica de pendientes en sync
- Eliminar credenciales hardcode
- Limpiar archivos mock/test
- Unificar endpoints plegado
+ [x] Corregir user_id
+ [] Corregir moves_log
+ [] Arreglar lógica de pendientes en sync
+ [] Eliminar credenciales hardcode
+ [] Limpiar archivos mock/test
+ [] Unificar endpoints plegado
 🟡 FASE 2 — Crear módulo en easySeri
- Crear carpeta modules/camaras-ubicacion
- Crear module.json
- Añadir ruta en router
- Ver módulo en menú
- Proteger con permisos
+ [] Crear carpeta modules/camaras-ubicacion
+ [] Crear module.json
+ [] Añadir ruta en router
+ [] Ver módulo en menú
+ [] Proteger con permisos
 🟡 FASE 3 — Integración mínima
- Mover scan.php al módulo
- Adaptar layout (renderLayout)
- Adaptar conexión DB a db()
- Eliminar login antiguo
+ [] Mover scan.php al módulo
+ [] Adaptar layout (renderLayout)
+ [] Adaptar conexión DB a db()
+ [] Eliminar login antiguo
 🟡 FASE 4 — APIs
- Migrar scan_lookup
- Migrar scan_confirm
- Migrar camera_rows
- Migrar entry_counts
- Validar duplicados
+ [] Migrar scan_lookup
+ [] Migrar scan_confirm
+ [] Migrar camera_rows
+ [] Migrar entry_counts
+ [] Validar duplicados
 🟡 FASE 5 — Movimientos
- move_entry
- move_pallet
- logs correctos
-🟡 FASE 6 — Admin
- cámaras
- filas
- posiciones
+[]  move_entry
+ [] move_pallet
+ [] logs correctos
+[] 🟡 FASE 6 — Admin
+ [] cámaras
+ [] filas
+ [] posiciones
 🟡 FASE 7 — Sync SAP
- corregir lógica
- documentar ejecución
- validar volcados
+ [] corregir lógica
+ [] documentar ejecución
+ [] validar volcados
 🟡 FASE 8 — Pruebas reales
- escaneo real
- duplicados
- ubicaciones
- movimientos
- volcados ERP
+ [] escaneo real
+ [] duplicados
+ [] ubicaciones
+ [] movimientos
+ [] volcados ERP
 🧠 DECISIONES IMPORTANTES
 ✔ NO reescribir desde cero
 ✔ Mantener tablas actuales
@@ -325,6 +325,16 @@ Concretamente:
 1. Arreglar user_id
 2. Arreglar moves_log
 3. Arreglar lógica pendientes sync 
+
+⚠️ PENDIENTE CRÍTICO — moves_log
+
+- ENUM actual no coincide con valores usados en código
+- Posibles registros incorrectos o perdidos
+- NO modificar en producción hasta migración completa
+
+ACCION FUTURA:
+→ Normalizar tipos (scan, move_*, plegado)
+→ Revisar histórico
 
 # 📍 FASE 8 — EVOLUCIÓN DE MÓDULOS
 
