@@ -21,7 +21,10 @@ error_reporting(E_ALL);
     <a class="navbar-brand" href="<?= e(url('/dashboard.php')) ?>"><?= e(APP_NAME) ?></a>
     <div class="d-flex">
       <?php if (current_user()): ?>
-        <span class="navbar-text text-white me-3">👤 <?= e(current_user()['username']) ?></span>
+        <?php $u = current_user(); ?>
+<span class="navbar-text text-white me-3">
+  👤 <?= e($u['name'] ?? $u['email'] ?? 'usuario') ?>
+</span>
         <a class="btn btn-outline-light btn-sm" href="<?= e(url('/logout.php')) ?>">Salir</a>
       <?php endif; ?>
     </div>
