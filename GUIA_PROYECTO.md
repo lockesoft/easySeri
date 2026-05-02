@@ -138,20 +138,193 @@ Antes de integrar aplicaciones reales, se completa toda la base común del siste
 ---
 
 # 📍 FASE 7 — PRIMER MÓDULO REAL
+ Añado nuevo orden y documento amestro para la parte especial de camaras
+📘 DOCUMENTO MAESTRO — MÓDULO CAMARAS-UBICACION (easySeri)
+📍 Estado general del proyecto
+PROYECTO: easySeri
+MÓDULO: camaras-ubicacion
+ESTADO: Fase 0 — Auditoría completada / Inicio integración
+🎯 OBJETIVO DEL MÓDULO
 
-## 🎥 Integración de cámaras (modo puente)
+Sistema de ubicación de palets en cámaras frigoríficas con:
 
-Objetivo:
-Integrar la aplicación existente sin modificarla inicialmente.
+✔ Escaneo con lector de códigos (ZXing)
+✔ Integración con ERP (SAP vía SQL Server → mirror MariaDB)
+✔ Ubicación automática por capacidad
+✔ Control de duplicados
+✔ Movimientos de palets / entradas
+✔ Gestión de cámaras físicas
+✔ Sistema simple para operarios (modo kiosco)
+🧠 ARQUITECTURA GENERAL
+Flujo principal
+ESCANEO PALLET
+→ lookup en erp_palets_mirror
+→ obtener entrada
+→ calcular pendientes
+→ sugerir cámara/fila
+→ confirmar ubicación
+→ guardar en placements
+→ registrar en moves_log
+Flujo de datos ERP
+SERVIDOR SAP (SIN INTERNET)
+↓ ODBC
+SQL SERVER (SERIFRUIT)
+↓ sync_sap.php
+MariaDB (ubicacion)
+↓
+easySeri (lectura local)
 
-- [ ] Crear módulo `camaras`
-- [ ] Añadir `module.json`
-- [ ] Añadir `menu.php`
-- [ ] Añadir permisos (`camaras.access`)
-- [ ] Integración vía iframe o redirección
-- [ ] Control de acceso por permisos
+⚠️ Importante:
 
----
+easySeri NO accede directamente a SAP
+
+🗃️ BASE DE DATOS (ACTUAL)
+Configuración física
+cameras
+camera_positions
+camera_row_groups
+camera_row_cells
+camera_conditions
+Ubicación real
+placements
+moves_log
+Datos espejo ERP
+erp_entradas_mirror
+erp_palets_mirror
+erp_plegados_mirror
+erp_entries_pending
+erp_entries_suppressed
+⚠️ A ELIMINAR
+users (NO se usará — sustituido por core_users)
+⚠️ PROBLEMAS DETECTADOS (CRÍTICOS)
+🔴 1. user_id incorrecto
+$_SESSION['user']['id'] vs $_SESSION['user_id']
+
+➡ placements puede estar guardando NULL
+
+🔴 2. moves_log inconsistente
+ENUM:
+move_row
+move_entry
+move_pallet
+
+Pero el código usa:
+
+scan_case1
+scan_case2
+
+➡ riesgo de fallo silencioso
+
+🔴 3. sync_sap lógica incorrecta
+Si existe 1 placement → marca entrada completa
+
+➡ INCORRECTO
+
+Debe ser:
+
+placed = COUNT placements
+remaining = total - placed
+🔴 4. credenciales en código
+includes/config.php
+
+➡ mover a .env
+
+🔴 5. endpoints duplicados / incoherentes
+plegado_confirm.php
+plegado_place.php
+
+➡ unificar lógica
+
+🔴 6. archivos peligrosos en producción
+*_old.php
+*_mock.php
+tools/*
+_selftest_delete.php
+
+➡ eliminar o proteger
+
+🧩 INTEGRACIÓN CON easySeri
+Estructura del módulo
+modules/camaras-ubicacion/
+├── module.json
+├── index.php
+├── scan.php
+├── move.php
+├── admin/
+├── reports/
+├── api/
+├── services/
+├── assets/
+└── legacy/ (temporal)
+Permisos
+camaras-ubicacion.access
+camaras-ubicacion.scan
+camaras-ubicacion.move
+camaras-ubicacion.admin
+camaras-ubicacion.reports
+🛠️ PLAN DE DESARROLLO (CHECKLIST)
+🟢 FASE 0 — Auditoría (COMPLETADO)
+ Revisar SQL
+ Revisar sync_sap.php
+ Revisar app completa
+ Detectar problemas críticos
+🟡 FASE 1 — Saneamiento (ANTES DE INTEGRAR)
+ Corregir user_id
+ Corregir moves_log
+ Arreglar lógica de pendientes en sync
+ Eliminar credenciales hardcode
+ Limpiar archivos mock/test
+ Unificar endpoints plegado
+🟡 FASE 2 — Crear módulo en easySeri
+ Crear carpeta modules/camaras-ubicacion
+ Crear module.json
+ Añadir ruta en router
+ Ver módulo en menú
+ Proteger con permisos
+🟡 FASE 3 — Integración mínima
+ Mover scan.php al módulo
+ Adaptar layout (renderLayout)
+ Adaptar conexión DB a db()
+ Eliminar login antiguo
+🟡 FASE 4 — APIs
+ Migrar scan_lookup
+ Migrar scan_confirm
+ Migrar camera_rows
+ Migrar entry_counts
+ Validar duplicados
+🟡 FASE 5 — Movimientos
+ move_entry
+ move_pallet
+ logs correctos
+🟡 FASE 6 — Admin
+ cámaras
+ filas
+ posiciones
+🟡 FASE 7 — Sync SAP
+ corregir lógica
+ documentar ejecución
+ validar volcados
+🟡 FASE 8 — Pruebas reales
+ escaneo real
+ duplicados
+ ubicaciones
+ movimientos
+ volcados ERP
+🧠 DECISIONES IMPORTANTES
+✔ NO reescribir desde cero
+✔ Mantener tablas actuales
+✔ Mantener sync_sap externo
+✔ Migración progresiva
+✔ Primero estabilidad, luego refactor
+🚀 SIGUIENTE PASO INMEDIATO
+
+👉 Empezar por FASE 1 — Saneamiento
+
+Concretamente:
+
+1. Arreglar user_id
+2. Arreglar moves_log
+3. Arreglar lógica pendientes sync
 
 # 📍 FASE 8 — EVOLUCIÓN DE MÓDULOS
 
