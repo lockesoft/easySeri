@@ -7,6 +7,7 @@ ob_start();
 
 <iframe 
     src="/easyseri/modules/camaras-ubicacion/legacy/scan.php" 
+    allow="camera; microphone; fullscreen"
     style="width:100%; height:80vh; border:none;">
 </iframe>
 
