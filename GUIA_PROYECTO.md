@@ -32,7 +32,7 @@ Reglas prácticas:
 
 ## 2. Estado actual en vivo
 
-**FASE ACTUAL:** FASE 3 — Integración funcional del módulo `camaras-ubicacion`.
+**FASE ACTUAL:** FASE 4.0 — Preparar multi-planta y prueba real A2 con plegados.
 
 ### Estado real comprobado / documentado
 
@@ -45,10 +45,230 @@ Reglas prácticas:
 - ✔ Ruta `/easyseri/camaras-ubicacion` funcionando.
 - ✔ Ruta `/easyseri/camaras-ubicacion/scan` funcionando.
 - ✔ Botón desde módulo hacia escaneo funcionando.
+- ✔ Integración legacy funcionando técnicamente.
+- ✔ La prueba real actual será en planta A2.
+- ✔ En este momento la prueba real disponible es con palets de plegado.
 
 ---
 
-## 3. Integración legacy validada
+## 3. Separación real de bases de datos
+
+### Base de datos core easySeri
+
+Nombre: `easyseri`.
+
+Contiene tablas del core:
+
+- `core_users`
+- `core_roles`
+- `core_permissions`
+- `core_modules`
+
+Resultado verificado:
+
+- `core_users` existe en `easyseri`.
+- `core_users` no existe en `ubicacion`.
+- Usuarios actuales verificados:
+  - Pablo
+  - Fabiola
+  - Josep
+  - Manolo
+  - Vicente Taberner
+
+Columnas verificadas en `core_users`:
+
+- `id`
+- `name`
+- `email`
+- `password_hash`
+- `is_active`
+- `created_at`
+- `updated_at`
+
+Conclusión:
+
+- ❌ `core_users` todavía no tiene campo de planta.
+- ✔ Si queremos asociar usuario a A1/A2, hay que añadir un campo nuevo o una tabla relacional.
+
+### Base de datos cámaras / legacy
+
+Nombre: `ubicacion`.
+
+Contiene tablas del módulo cámaras:
+
+- `cameras`
+- `placements`
+- `erp_plegados_mirror`
+- `erp_palets_mirror`
+- `erp_entradas_mirror`
+- `erp_entries_pending`
+- `moves_log`
+
+---
+
+## 4. Estado real verificado de cámaras
+
+Tabla: `ubicacion.cameras`.
+
+Columnas verificadas:
+
+- `id`
+- `name`
+- `code`
+- `priority`
+- `entry_row`
+- `entry_col`
+- `notes`
+
+Cámaras actuales verificadas:
+
+| id | name | code | priority | Observación |
+|---:|---|---|---:|---|
+| 1 | Camara 4 descarga | Descarga4 | 10 | A1 actual |
+| 2 | Camara 3 descarga | Descarga3 | 9 | A1 actual |
+| 4 | Camara 1 descarga | Descarga1 | 7 | A1 actual |
+| 3 | Camara 2 descarga | Descarga2 | 0 | A1 actual |
+| 5 | Campa | CampaA1 | 0 | A1 actual |
+
+Conclusión:
+
+- ✔ Ahora mismo solo hay cámaras de A1 cargadas.
+- ❌ `cameras` no tiene campo de planta.
+- ⚠ El riesgo de mezcla A1/A2 no existe hoy porque no hay cámaras A2 todavía.
+- ⚠ El riesgo aparecerá cuando añadamos cámaras A2 si no se añade control de planta.
+
+---
+
+## 5. Estado real verificado de placements
+
+Tabla: `ubicacion.placements`.
+
+Columnas verificadas:
+
+- `id`
+- `camera_id`
+- `row_idx`
+- `col_idx`
+- `level_idx`
+- `entrada_num`
+- `source_type`
+- `pallet_num`
+- `placed_at`
+- `placed_by`
+- `removed_at`
+- `removed_source`
+- `created_at`
+- `updated_at`
+
+Dato importante:
+
+- ✔ `source_type` existe.
+- ✔ `source_type` permite `entrada` o `plegado`.
+
+Conclusión:
+
+- ✔ La tabla ya está preparada parcialmente para distinguir origen: campo/entrada frente a plegado.
+- ❌ `placements` no tiene campo de planta.
+- ✔ La planta puede deducirse por la cámara si `cameras` recibe campo de planta.
+- Recomendación: no duplicar planta en `placements` de momento salvo necesidad real; primero asociar planta a `cameras`.
+
+---
+
+## 6. Estado real verificado de plegados
+
+Tabla: `ubicacion.erp_plegados_mirror`.
+
+Columnas verificadas:
+
+- `pallet_num`
+- `tipo`
+- `variedad`
+- `calibres1`
+- `kg_reales`
+- `cajones`
+- `fecha`
+- `almacen`
+- `comentario`
+- `numero_volcador`
+- `src_updated_at`
+- `synced_at`
+
+Valor real verificado:
+
+- `SELECT DISTINCT almacen FROM erp_plegados_mirror` devuelve: `02`.
+
+Conclusión:
+
+- ✔ En este momento los plegados vienen con `almacen = 02`.
+- ⚠ No está confirmado todavía si `02` significa A2 de forma oficial.
+- Hipótesis razonable pendiente de confirmar: `02` podría corresponder a planta/almacén A2.
+- Para la prueba A2 con plegados se debe validar que `almacen = 02` representa A2 antes de automatizar reglas definitivas.
+
+---
+
+## 7. Estado real verificado de entradas de campo
+
+Tabla: `ubicacion.erp_entradas_mirror`.
+
+Columnas verificadas:
+
+- `entrada_num`
+- `boleto_id`
+- `boleto_cod`
+- `almacen_nombre`
+- `propietario`
+- `conductor`
+- `matricula`
+- `kg_reales`
+- `fecha_boleto`
+- `synced_at`
+- `src_updated_at`
+
+Valor real verificado:
+
+- `SELECT DISTINCT almacen_nombre FROM erp_entradas_mirror` devuelve: `ALMACEN A1`.
+
+Conclusión:
+
+- ✔ En este momento las entradas de campo visibles en mirror corresponden a `ALMACEN A1`.
+- ✔ Esto confirma que la parte de campo venía trabajando con A1.
+- ⚠ Para A2/campo hará falta comprobar qué valor real aparece cuando existan entradas de campo A2.
+
+---
+
+## 8. Estado real verificado de moves_log
+
+Tabla: `ubicacion.moves_log`.
+
+Columnas verificadas:
+
+- `id`
+- `moved_at`
+- `moved_by`
+- `type`
+- `src_camera_id`
+- `src_row_group_id`
+- `dest_camera_id`
+- `dest_row_group_id`
+- `entrada_num`
+- `pallets_count`
+- `notes`
+
+Tipos válidos:
+
+- `move_row`
+- `move_entry`
+- `move_pallet`
+
+Conclusión:
+
+- ✔ `move_confirm.php` puede registrar movimientos usando tipos existentes.
+- ❌ `scan_confirm.php` no debe registrar todavía `scan_case1`/`scan_case2` porque esos tipos no existen.
+- ⚠ Si se quiere auditar ubicaciones iniciales, habrá que ampliar el enum o crear otra tabla de auditoría.
+
+---
+
+## 9. Integración legacy validada
 
 - ✔ Pantalla legacy `scan.php` cargando en iframe.
 - ✔ Cámara funcionando correctamente.
@@ -64,7 +284,7 @@ Decisión importante:
 
 ---
 
-## 4. Endpoints funcionales
+## 10. Endpoints funcionales
 
 ### Lectura
 
@@ -78,39 +298,14 @@ Decisión importante:
 - ✔ `scan_confirm.php`
 - ✔ `move_confirm.php`
 
----
+Nota importante:
 
-## 5. Validaciones realizadas
-
-### Escaneo y lectura
-
-- ✔ Escaneo manual simulado.
-- ✔ Detección de palet OK.
-- ✔ Detección de entrada OK.
-- ✔ Cálculo de pendientes OK.
-- ✔ Listado de cámaras OK.
-- ✔ Listado de filas OK.
-
-### Inserción de ubicación
-
-- ✔ Inserción controlada (`limit=1`) OK.
-- ✔ Inserción múltiple preparada.
-- ✔ `placed_by` correcto usando usuario easySeri.
-
-### Movimiento de palets
-
-- ✔ Movimiento controlado (`max_move=1`) OK.
-- ✔ Cierre correcto de placement anterior (`removed_at`).
-- ✔ Inserción de nueva posición OK.
-- ✔ Integridad de datos mantenida.
-
-### Estado de entradas pendientes
-
-- ✔ Actualización de `erp_entries_pending` OK.
+- `entry_counts.php` está orientado a entradas de campo (`erp_palets_mirror`).
+- Para plegados individuales, no se debe depender de `entrada_num` como si fuese campo.
 
 ---
 
-## 6. Decisiones importantes tomadas
+## 11. Decisiones importantes tomadas
 
 ### Base de datos legacy cámaras
 
@@ -136,10 +331,10 @@ Decisión importante:
 
 ### Plantas A1 / A2
 
-- ✔ El sistema debe contemplar que los palets puedan pertenecer o ubicarse en planta A1 o planta A2.
-- ✔ Hasta ahora la funcionalidad se había trabajado principalmente sobre A1.
+- ✔ Ahora mismo solo hay cámaras A1 en `cameras`.
 - ✔ La prueba real actual se realizará en planta A2.
-- ✔ El diseño no debe quedar fijo a una sola planta.
+- ✔ En planta A2 ahora solo hay palets de plegado para probar.
+- ✔ El diseño debe contemplar que los palets puedan pertenecer o ubicarse en A1 o A2.
 - ✔ Cada usuario podrá estar asociado a una planta de trabajo, por ejemplo A1 o A2.
 - ✔ Las búsquedas, listados, cámaras, ubicaciones y validaciones deberán tener en cuenta la planta del usuario o la planta seleccionada.
 
@@ -154,17 +349,11 @@ Decisión importante:
 
 ---
 
-## 7. Problemas detectados / pendientes
+## 12. Problemas detectados / pendientes
 
-### 7.1 Datos inconsistentes de prueba
+### 12.1 Datos inconsistentes de prueba
 
 Estado: **PENDIENTE**.
-
-Motivos esperados:
-
-- Pruebas manuales.
-- Entorno no real.
-- Inserciones de test.
 
 Acción futura:
 
@@ -174,66 +363,54 @@ Acción futura:
 - Mantener estructura de tablas.
 - No borrar nada sin copia previa y revisión de tablas reales.
 
----
-
-### 7.2 `moves_log` incompleto
+### 12.2 Planta del usuario
 
 Estado: **PENDIENTE**.
 
-Situación actual:
+Hecho verificado:
 
-- `scan_confirm.php` no registra logs.
-- `move_confirm.php` registra parcialmente.
+- `core_users` no tiene campo de planta.
 
-Acción futura:
+Acción futura recomendada:
 
-- Revisar estructura real de `moves_log`.
-- Confirmar tipos válidos.
-- Decidir qué acciones deben registrarse.
-- Añadir auditoría solo después de verificar estructura y flujo.
+- Añadir campo `plant` o `planta` en `easyseri.core_users`.
+- Valores propuestos: `A1`, `A2`.
+- Definir si hay usuarios multi-planta mediante permiso especial.
 
----
+### 12.3 Planta de cámaras
 
-### 7.3 Endpoints legacy extra
+Estado: **PENDIENTE**.
 
-Estado: **NO INTEGRADOS AÚN**.
+Hecho verificado:
 
-Detectados:
+- `ubicacion.cameras` no tiene campo de planta.
+- Todas las cámaras actuales son A1.
 
-- `plegados`
-- `tools`
-- endpoints antiguos
+Acción futura recomendada:
 
-Acción futura:
+- Añadir campo `plant` o `planta` en `ubicacion.cameras`.
+- Marcar cámaras actuales como `A1`.
+- Crear después cámaras A2.
 
-- Revisar cada endpoint real.
-- Clasificar como: necesario, obsoleto o pendiente.
-- No eliminar nada sin comprobar dependencias.
+### 12.4 Flujo plegado individual
 
----
+Estado: **PENDIENTE**.
 
-### 7.4 Planta del usuario / planta del palet
+Hecho verificado:
 
-Estado: **PENDIENTE DE DISEÑO Y VERIFICACIÓN EN CÓDIGO**.
+- `erp_plegados_mirror` existe.
+- `placements.source_type` admite `plegado`.
+- El flujo actual de ubicación está más orientado a entrada de campo.
 
-Necesidad:
+Acción futura recomendada:
 
-- Definir cómo se guarda la planta del usuario.
-- Definir cómo se guarda o deduce la planta del palet.
-- Definir si la cámara pertenece a A1, A2 o ambas.
-- Definir si el usuario puede cambiar de planta manualmente o queda fijado por perfil.
-- Definir cómo evitar que un usuario de A2 ubique por error en una cámara de A1, salvo permiso especial.
-
-Acción futura:
-
-- Revisar estructura real de tablas de usuarios.
-- Revisar estructura real de cámaras.
-- Revisar mirror de plegados/campo.
-- Añadir campos de planta solo después de verificar estructura actual.
+- Crear/adaptar flujo de ubicación de plegado individual.
+- Insertar `placements` con `source_type = 'plegado'`.
+- Usar `entrada_num = ''` o revisar si conviene permitir `NULL` en el futuro.
 
 ---
 
-## 8. Arquitectura actual
+## 13. Arquitectura actual
 
 ### Core easySeri
 
@@ -252,7 +429,7 @@ Acción futura:
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
 
-### Requisito nuevo: multi-planta
+### Requisito multi-planta
 
 El módulo cámaras debe evolucionar para trabajar correctamente con:
 
@@ -265,9 +442,9 @@ El módulo cámaras debe evolucionar para trabajar correctamente con:
 
 ---
 
-## 9. Flujo real validado
+## 14. Flujo real validado
 
-### Flujo scan
+### Flujo scan campo actual
 
 ```txt
 scan.php
@@ -285,7 +462,7 @@ scan_confirm.php
 INSERT placements
 ```
 
-### Flujo move
+### Flujo move actual
 
 ```txt
 scan.php / flujo movimiento
@@ -297,177 +474,103 @@ UPDATE placement anterior con removed_at
 INSERT nueva posición
 ```
 
-### Flujo pendiente multi-planta
-
-Antes de validar en planta A2, el flujo deberá contemplar:
+### Flujo pendiente para plegado A2
 
 ```txt
 usuario easySeri
   ↓
-planta del usuario o planta seleccionada
+planta del usuario o planta seleccionada: A2
   ↓
 escaneo de palet
   ↓
-detectar origen: plegado o campo
+detectar source = plegado
   ↓
-detectar/confirmar planta del palet: A1 o A2
+leer erp_plegados_mirror.almacen = 02
   ↓
-mostrar solo cámaras/filas válidas para esa planta
+confirmar equivalencia 02 = A2
   ↓
-confirmar ubicación
+mostrar solo cámaras/filas de A2
+  ↓
+confirmar ubicación individual
+  ↓
+INSERT placements con source_type = plegado
 ```
 
 ---
 
-## 10. Base de datos usada activamente
+## 15. Siguiente fase
 
-Tablas marcadas como activas:
-
-- ✔ `placements`
-- ✔ `cameras`
-- ✔ `camera_positions`
-- ✔ `camera_row_groups`
-- ✔ `camera_row_cells`
-- ✔ `erp_palets_mirror`
-- ✔ `erp_entradas_mirror`
-- ✔ `erp_entries_pending`
-
-Tabla parcial / pendiente de revisión:
-
-- ⚠ `moves_log`
-
-Pendiente de comprobar para multi-planta:
-
-- Si `core_users` tiene campo de planta.
-- Si `cameras` tiene campo de planta.
-- Si los mirrors de palets/entradas/plegados contienen almacén, planta o ubicación origen.
-- Si `placements` necesita registrar planta explícitamente o se deduce por cámara.
-
----
-
-## 11. Siguiente fase
-
-**FASE 4 — Estabilizar, limpiar y preparar multi-planta**
+**FASE 4.0 — Preparar prueba A2 con plegados sin romper A1**
 
 Objetivo:
 
 ```txt
-Hacer robusto lo que ya funciona técnicamente y prepararlo para A1/A2 sin romper A1.
+Añadir soporte mínimo multi-planta y flujo de plegado individual para validar en A2.
 ```
 
 ---
 
-## 12. Tareas de Fase 4
+## 16. Tareas de Fase 4.0
 
-### 12.1 Reset controlado de datos
-
-Prioridad: **ALTA**.
-
-Tareas:
-
-- Revisar tablas reales antes de tocar datos.
-- Preparar copia/export previo.
-- Limpiar `placements` de prueba.
-- Limpiar estados incoherentes.
-- Mantener estructura.
-- Documentar SQL usado.
-- Tener en cuenta que la prueba actual será en A2 y con plegados.
-
----
-
-### 12.2 Validación real en planta A2
+### 16.1 SQL estructural mínimo
 
 Prioridad: **ALTA**.
 
-Condición actual:
+Pendiente preparar y ejecutar con copia previa:
 
-- En este momento la prueba en planta será en A2.
-- En este momento en planta solo hay palets de plegado disponibles para probar.
-- La funcionalidad anterior se había trabajado principalmente pensando en A1.
+- Añadir planta a `easyseri.core_users`.
+- Añadir planta a `ubicacion.cameras`.
+- Marcar cámaras actuales como A1.
+- No tocar todavía `placements` salvo necesidad verificada.
 
-Tareas:
+### 16.2 Crear cámaras A2
 
-- Escaneo real con cámara o lector.
-- Validación con palet real de plegado.
-- Validación de planta A2.
-- Confirmación de ubicación real en cámara/fila de A2.
-- Movimiento real entre posiciones de A2.
-- Comprobar que no se mezclan cámaras de A1 con A2.
-- Comprobar tiempos de uso con operario.
-- Detectar problemas de UX.
-
----
-
-### 12.3 Revisión de logs y auditoría
-
-Prioridad: **MEDIA / ALTA**.
-
-Tareas:
-
-- Revisar `moves_log` real.
-- Definir qué eventos se registran.
-- Registrar movimientos sin duplicar datos.
-- Evitar romper tipos existentes.
-- Incluir planta en auditoría si la estructura lo permite o si se añade campo validado.
-
----
-
-### 12.4 Permisos finos de cámaras
-
-Prioridad: **MEDIA**.
-
-Permisos propuestos:
-
-- `camaras.scan`
-- `camaras.move`
-- `camaras.admin`
-- `camaras.all_plants` para usuarios autorizados a operar A1 y A2.
+Prioridad: **ALTA**.
 
 Pendiente:
 
-- Revisar sistema actual de permisos.
-- Crear permisos en base de datos.
-- Asignar permisos a roles.
-- Aplicar permisos en rutas/endpoints.
-- Definir si un usuario normal solo ve su planta.
+- Definir cámaras reales de A2.
+- Definir códigos.
+- Definir prioridades.
+- Definir filas/posiciones si aplica.
+
+### 16.3 Adaptar lectura de cámaras por planta
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- `cameras.php` debe filtrar por planta activa.
+- La planta activa vendrá del usuario o de selección autorizada.
+- Usuarios normales solo deberían ver su planta.
+
+### 16.4 Adaptar flujo plegado individual
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- Si `pallet_status.php` devuelve `mode = plegado`, no usar flujo de entrada completa.
+- Mostrar datos de plegado.
+- Permitir ubicar un único palet plegado.
+- Insertar `source_type = plegado`.
+
+### 16.5 Validación real en A2
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- Escaneo real de palet plegado.
+- Ubicación en cámara/fila A2.
+- Movimiento real entre posiciones A2.
+- Confirmar que A1 no se ve ni se usa desde usuario A2, salvo permiso especial.
 
 ---
 
-### 12.5 Mejora de UI operario
-
-Prioridad: **MEDIA**.
-
-Tareas futuras:
-
-- Eliminar iframe cuando sea seguro.
-- Integrar scan directamente en layout easySeri.
-- Simplificar pantalla para operario.
-- Mostrar claramente planta activa: A1 o A2.
-- Mostrar claramente tipo de palet: plegado o campo.
-- Mejorar mensajes visuales.
-- Mantener compatibilidad móvil/tablet.
-
----
-
-### 12.6 Revisión de endpoints secundarios
-
-Prioridad: **BAJA / MEDIA**.
-
-Pendiente revisar:
-
-- `plegados`
-- informes
-- administración de cámaras
-- herramientas antiguas
-- endpoints obsoletos
-
----
-
-## 13. Riesgos conocidos
+## 17. Riesgos conocidos
 
 ### Riesgo 1 — Datos de prueba mezclados
-
-Puede provocar resultados incoherentes en validación real.
 
 Mitigación:
 
@@ -477,8 +580,6 @@ Mitigación:
 
 ### Riesgo 2 — Legacy funcional pero no completamente integrado
 
-El iframe funciona, pero puede complicar permisos, estilos y mantenimiento.
-
 Mitigación:
 
 - Mantener iframe hasta validar en planta.
@@ -486,23 +587,21 @@ Mitigación:
 
 ### Riesgo 3 — Logs incompletos
 
-Puede faltar trazabilidad completa de operaciones.
-
 Mitigación:
 
 - Revisar `moves_log` antes de ampliar.
 
 ### Riesgo 4 — Permisos demasiado generales
 
-Actualmente el acceso principal depende de `camaras-ubicacion.access`.
-
 Mitigación:
 
-- Añadir permisos finos en Fase 4.
+- Añadir permisos finos.
 
-### Riesgo 5 — Mezcla de plantas A1/A2
+### Riesgo 5 — Mezcla futura de plantas A1/A2
 
-Si no se controla la planta, un usuario podría ubicar un palet en una cámara incorrecta.
+Ahora no hay mezcla porque solo existen cámaras A1.
+
+El riesgo aparecerá al crear cámaras A2.
 
 Mitigación:
 
@@ -513,16 +612,14 @@ Mitigación:
 
 ### Riesgo 6 — Mezcla de origen plegado/campo
 
-Si no se distingue el origen del palet, podrían aplicarse reglas incorrectas.
-
 Mitigación:
 
-- Detectar o registrar tipo de palet: plegado/campo.
+- Usar `source_type`.
 - Validar mirrors reales antes de tocar código.
 
 ---
 
-## 14. Filosofía del proyecto
+## 18. Filosofía del proyecto
 
 ```txt
 Primero funcional.
@@ -535,7 +632,7 @@ No se debe refactorizar algo crítico si todavía no está validado en planta.
 
 ---
 
-## 15. Conclusión actual
+## 19. Conclusión actual
 
 El módulo `camaras-ubicacion`:
 
@@ -543,40 +640,30 @@ El módulo `camaras-ubicacion`:
 - ✔ Ya se integra con easySeri.
 - ✔ Ya carga la pantalla de escaneo.
 - ✔ Ya consulta endpoints.
-- ✔ Ya inserta ubicaciones.
+- ✔ Ya inserta ubicaciones para flujo de entrada.
 - ✔ Ya mueve palets.
+- ✔ Ya tiene `source_type` preparado para `entrada` y `plegado`.
 
 Ahora toca:
 
 ```txt
-hacerlo robusto, limpio, multi-planta y usable en entorno real.
+preparar multi-planta y plegado individual para poder probar A2 sin romper A1.
 ```
 
 ---
 
-## 16. Siguiente paso recomendado
+## 20. Siguiente paso recomendado
 
 Opción recomendada:
 
 ```txt
-REVISIÓN MULTI-PLANTA + RESET CONTROLADO + PRUEBA EN PLANTA A2 CON PLEGADOS
+SQL ESTRUCTURAL MÍNIMO + CÁMARAS A2 + FLUJO PLEGADO INDIVIDUAL
 ```
 
-Antes de hacer el reset:
+Antes de ejecutar SQL:
 
-1. Revisar estructura real de tablas.
-2. Comprobar si usuarios tienen planta.
-3. Comprobar si cámaras tienen planta.
-4. Comprobar si palets de plegado/campo tienen planta o almacén origen.
-5. Hacer copia/export.
-6. Preparar SQL reversible o muy controlado.
-7. Ejecutar limpieza.
-8. Probar con un flujo real completo en A2.
-
-Opción alternativa:
-
-```txt
-seguir integrando administración de cámaras / UI / permisos
-```
-
-No recomendada antes de validar datos reales y multi-planta.
+1. Hacer copia/export.
+2. Confirmar que `erp_plegados_mirror.almacen = 02` corresponde a A2.
+3. Confirmar nombres/códigos de cámaras A2.
+4. Ejecutar cambios pequeños.
+5. Probar con un palet plegado real en A2.
