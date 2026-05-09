@@ -134,6 +134,24 @@ Decisión importante:
 - ❌ No conectar easySeri directamente a SAP.
 - ✔ Usar mirror mediante `sync_sap.php`.
 
+### Plantas A1 / A2
+
+- ✔ El sistema debe contemplar que los palets puedan pertenecer o ubicarse en planta A1 o planta A2.
+- ✔ Hasta ahora la funcionalidad se había trabajado principalmente sobre A1.
+- ✔ La prueba real actual se realizará en planta A2.
+- ✔ El diseño no debe quedar fijo a una sola planta.
+- ✔ Cada usuario podrá estar asociado a una planta de trabajo, por ejemplo A1 o A2.
+- ✔ Las búsquedas, listados, cámaras, ubicaciones y validaciones deberán tener en cuenta la planta del usuario o la planta seleccionada.
+
+### Tipos de palets / origen operativo
+
+- ✔ En la prueba actual de planta solo hay palets de plegado.
+- ✔ A futuro el sistema debe soportar tanto palets de plegado como palets de campo.
+- ✔ Ambos tipos podrán existir en A1 o en A2.
+- ✔ No se debe asumir que un palet pertenece a A1 por defecto.
+- ✔ No se debe asumir que todos los palets son de campo.
+- ✔ No se debe asumir que todos los palets son de plegado.
+
 ---
 
 ## 7. Problemas detectados / pendientes
@@ -194,6 +212,27 @@ Acción futura:
 
 ---
 
+### 7.4 Planta del usuario / planta del palet
+
+Estado: **PENDIENTE DE DISEÑO Y VERIFICACIÓN EN CÓDIGO**.
+
+Necesidad:
+
+- Definir cómo se guarda la planta del usuario.
+- Definir cómo se guarda o deduce la planta del palet.
+- Definir si la cámara pertenece a A1, A2 o ambas.
+- Definir si el usuario puede cambiar de planta manualmente o queda fijado por perfil.
+- Definir cómo evitar que un usuario de A2 ubique por error en una cámara de A1, salvo permiso especial.
+
+Acción futura:
+
+- Revisar estructura real de tablas de usuarios.
+- Revisar estructura real de cámaras.
+- Revisar mirror de plegados/campo.
+- Añadir campos de planta solo después de verificar estructura actual.
+
+---
+
 ## 8. Arquitectura actual
 
 ### Core easySeri
@@ -212,6 +251,17 @@ Acción futura:
 - APIs legacy adaptadas.
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
+
+### Requisito nuevo: multi-planta
+
+El módulo cámaras debe evolucionar para trabajar correctamente con:
+
+- Planta A1.
+- Planta A2.
+- Usuarios asociados a una planta.
+- Palets de plegado en A1/A2.
+- Palets de campo en A1/A2.
+- Cámaras asociadas a planta.
 
 ---
 
@@ -247,6 +297,26 @@ UPDATE placement anterior con removed_at
 INSERT nueva posición
 ```
 
+### Flujo pendiente multi-planta
+
+Antes de validar en planta A2, el flujo deberá contemplar:
+
+```txt
+usuario easySeri
+  ↓
+planta del usuario o planta seleccionada
+  ↓
+escaneo de palet
+  ↓
+detectar origen: plegado o campo
+  ↓
+detectar/confirmar planta del palet: A1 o A2
+  ↓
+mostrar solo cámaras/filas válidas para esa planta
+  ↓
+confirmar ubicación
+```
+
 ---
 
 ## 10. Base de datos usada activamente
@@ -266,16 +336,23 @@ Tabla parcial / pendiente de revisión:
 
 - ⚠ `moves_log`
 
+Pendiente de comprobar para multi-planta:
+
+- Si `core_users` tiene campo de planta.
+- Si `cameras` tiene campo de planta.
+- Si los mirrors de palets/entradas/plegados contienen almacén, planta o ubicación origen.
+- Si `placements` necesita registrar planta explícitamente o se deduce por cámara.
+
 ---
 
 ## 11. Siguiente fase
 
-**FASE 4 — Estabilizar y limpiar**
+**FASE 4 — Estabilizar, limpiar y preparar multi-planta**
 
 Objetivo:
 
 ```txt
-Hacer robusto lo que ya funciona técnicamente.
+Hacer robusto lo que ya funciona técnicamente y prepararlo para A1/A2 sin romper A1.
 ```
 
 ---
@@ -294,20 +371,28 @@ Tareas:
 - Limpiar estados incoherentes.
 - Mantener estructura.
 - Documentar SQL usado.
+- Tener en cuenta que la prueba actual será en A2 y con plegados.
 
 ---
 
-### 12.2 Validación real en planta
+### 12.2 Validación real en planta A2
 
 Prioridad: **ALTA**.
+
+Condición actual:
+
+- En este momento la prueba en planta será en A2.
+- En este momento en planta solo hay palets de plegado disponibles para probar.
+- La funcionalidad anterior se había trabajado principalmente pensando en A1.
 
 Tareas:
 
 - Escaneo real con cámara o lector.
-- Validación con palet real.
-- Validación con entrada real.
-- Confirmación de ubicación real.
-- Movimiento real entre posiciones.
+- Validación con palet real de plegado.
+- Validación de planta A2.
+- Confirmación de ubicación real en cámara/fila de A2.
+- Movimiento real entre posiciones de A2.
+- Comprobar que no se mezclan cámaras de A1 con A2.
 - Comprobar tiempos de uso con operario.
 - Detectar problemas de UX.
 
@@ -323,6 +408,7 @@ Tareas:
 - Definir qué eventos se registran.
 - Registrar movimientos sin duplicar datos.
 - Evitar romper tipos existentes.
+- Incluir planta en auditoría si la estructura lo permite o si se añade campo validado.
 
 ---
 
@@ -335,6 +421,7 @@ Permisos propuestos:
 - `camaras.scan`
 - `camaras.move`
 - `camaras.admin`
+- `camaras.all_plants` para usuarios autorizados a operar A1 y A2.
 
 Pendiente:
 
@@ -342,6 +429,7 @@ Pendiente:
 - Crear permisos en base de datos.
 - Asignar permisos a roles.
 - Aplicar permisos en rutas/endpoints.
+- Definir si un usuario normal solo ve su planta.
 
 ---
 
@@ -354,6 +442,8 @@ Tareas futuras:
 - Eliminar iframe cuando sea seguro.
 - Integrar scan directamente en layout easySeri.
 - Simplificar pantalla para operario.
+- Mostrar claramente planta activa: A1 o A2.
+- Mostrar claramente tipo de palet: plegado o campo.
 - Mejorar mensajes visuales.
 - Mantener compatibilidad móvil/tablet.
 
@@ -410,6 +500,26 @@ Mitigación:
 
 - Añadir permisos finos en Fase 4.
 
+### Riesgo 5 — Mezcla de plantas A1/A2
+
+Si no se controla la planta, un usuario podría ubicar un palet en una cámara incorrecta.
+
+Mitigación:
+
+- Asociar cámaras a planta.
+- Asociar usuario a planta.
+- Filtrar cámaras/filas por planta activa.
+- Permitir multi-planta solo con permiso específico.
+
+### Riesgo 6 — Mezcla de origen plegado/campo
+
+Si no se distingue el origen del palet, podrían aplicarse reglas incorrectas.
+
+Mitigación:
+
+- Detectar o registrar tipo de palet: plegado/campo.
+- Validar mirrors reales antes de tocar código.
+
 ---
 
 ## 14. Filosofía del proyecto
@@ -439,7 +549,7 @@ El módulo `camaras-ubicacion`:
 Ahora toca:
 
 ```txt
-hacerlo robusto, limpio y usable en entorno real.
+hacerlo robusto, limpio, multi-planta y usable en entorno real.
 ```
 
 ---
@@ -449,16 +559,19 @@ hacerlo robusto, limpio y usable en entorno real.
 Opción recomendada:
 
 ```txt
-RESET CONTROLADO + PRUEBA EN PLANTA
+REVISIÓN MULTI-PLANTA + RESET CONTROLADO + PRUEBA EN PLANTA A2 CON PLEGADOS
 ```
 
 Antes de hacer el reset:
 
 1. Revisar estructura real de tablas.
-2. Hacer copia/export.
-3. Preparar SQL reversible o muy controlado.
-4. Ejecutar limpieza.
-5. Probar con un flujo real completo.
+2. Comprobar si usuarios tienen planta.
+3. Comprobar si cámaras tienen planta.
+4. Comprobar si palets de plegado/campo tienen planta o almacén origen.
+5. Hacer copia/export.
+6. Preparar SQL reversible o muy controlado.
+7. Ejecutar limpieza.
+8. Probar con un flujo real completo en A2.
 
 Opción alternativa:
 
@@ -466,4 +579,4 @@ Opción alternativa:
 seguir integrando administración de cámaras / UI / permisos
 ```
 
-No recomendada antes de validar datos reales.
+No recomendada antes de validar datos reales y multi-planta.
