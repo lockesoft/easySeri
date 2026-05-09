@@ -32,7 +32,7 @@ Reglas prácticas:
 
 ## 2. Estado actual en vivo
 
-**FASE ACTUAL:** FASE 4.0 — Preparar multi-planta y prueba real A2 con plegados.
+**FASE ACTUAL:** FASE 4.0 — Crear base multi-planta común antes de prueba A2.
 
 ### Estado real comprobado / documentado
 
@@ -48,6 +48,7 @@ Reglas prácticas:
 - ✔ Integración legacy funcionando técnicamente.
 - ✔ La prueba real actual será en planta A2.
 - ✔ En este momento la prueba real disponible es con palets de plegado.
+- ✔ Se decide crear un módulo común `admin-plantas` para gestionar plantas dinámicamente.
 
 ---
 
@@ -344,6 +345,16 @@ Nota importante:
 - ✔ Si el usuario solo tiene una planta, la planta activa se seleccionará automáticamente.
 - ✔ Si el usuario tiene varias plantas, deberá poder elegir planta activa o tener una planta por defecto.
 
+### Módulo común de plantas
+
+- ✔ Se decide crear un módulo propio `admin-plantas`.
+- ✔ El módulo permitirá crear plantas de trabajo de forma dinámica.
+- ✔ El módulo permitirá editar plantas.
+- ✔ El módulo permitirá activar/desactivar plantas.
+- ✔ El módulo permitirá asignar una o varias plantas a cada usuario.
+- ✔ El módulo permitirá modificar las plantas asignadas a cada usuario.
+- ✔ Esta gestión será común para todo easySeri, no exclusiva de cámaras.
+
 ### Tipos de palets / origen operativo
 
 - ✔ En la prueba actual de planta solo hay palets de plegado.
@@ -381,12 +392,14 @@ Decisión corregida:
 
 - ❌ No basta con añadir solo `core_users.plant` como solución final.
 - ✔ Hay que permitir usuarios con acceso a A1, A2 o ambas.
+- ✔ La gestión debe hacerse desde un módulo administrativo.
 
 Diseño recomendado:
 
 - Crear catálogo de plantas.
 - Crear tabla relacional usuario-planta.
 - Añadir opcionalmente planta por defecto del usuario.
+- Crear módulo `admin-plantas` para gestionar todo desde la interfaz.
 
 Modelo recomendado:
 
@@ -402,6 +415,7 @@ Ventaja:
 - Usuario de A2: una relación.
 - Usuario A1+A2: dos relaciones.
 - Planta activa se decide por defecto o por selección.
+- El sistema puede crecer a más plantas sin rehacer estructura.
 
 ### 12.3 Planta de cámaras
 
@@ -447,6 +461,21 @@ Acción futura recomendada:
 - Módulos dinámicos.
 - Menú por permisos.
 
+### Módulo plantas propuesto
+
+Módulo: `admin-plantas`.
+
+Responsabilidad:
+
+- Gestión del catálogo de plantas.
+- Alta de plantas.
+- Edición de plantas.
+- Activación/desactivación de plantas.
+- Asignación de plantas a usuarios.
+- Definición de planta por defecto del usuario.
+
+Este módulo debe formar parte del core funcional común de easySeri.
+
 ### Módulo cámaras
 
 - Módulo `camaras-ubicacion` integrado.
@@ -454,17 +483,17 @@ Acción futura recomendada:
 - APIs legacy adaptadas.
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
+- Debe consumir la planta activa definida por el core/módulo plantas.
 
 ### Requisito multi-planta
 
-El módulo cámaras debe evolucionar para trabajar correctamente con:
+El sistema debe evolucionar para trabajar correctamente con:
 
-- Planta A1.
-- Planta A2.
+- Plantas dinámicas, no hardcodeadas exclusivamente a A1/A2.
 - Usuarios asociados a una o varias plantas.
 - Planta activa de trabajo.
-- Palets de plegado en A1/A2.
-- Palets de campo en A1/A2.
+- Palets de plegado por planta.
+- Palets de campo por planta.
 - Cámaras asociadas a planta.
 
 ---
@@ -531,12 +560,12 @@ INSERT placements con source_type = plegado
 
 ## 15. Siguiente fase
 
-**FASE 4.0 — Preparar prueba A2 con plegados sin romper A1**
+**FASE 4.0 — Crear módulo plantas y preparar prueba A2 con plegados sin romper A1**
 
 Objetivo:
 
 ```txt
-Añadir soporte mínimo multi-planta y flujo de plegado individual para validar en A2.
+Crear gestión dinámica de plantas, asignarlas a usuarios y usar esa base para validar cámaras en A2.
 ```
 
 ---
@@ -549,14 +578,35 @@ Prioridad: **ALTA**.
 
 Pendiente preparar y ejecutar con copia previa:
 
-- Crear catálogo de plantas en `easyseri`.
-- Crear relación usuario-planta en `easyseri`.
-- Permitir planta por defecto opcional en `core_users`.
+- Crear tabla `core_plants`.
+- Crear tabla `core_user_plants`.
+- Añadir `default_plant_id` opcional en `core_users`.
+- Crear plantas iniciales A1 y A2.
+- Asignar plantas iniciales a usuarios.
 - Añadir planta a `ubicacion.cameras`.
 - Marcar cámaras actuales como A1.
 - No tocar todavía `placements` salvo necesidad verificada.
 
-### 16.2 Crear cámaras A2
+### 16.2 Crear módulo `admin-plantas`
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- Crear carpeta `modules/admin-plantas`.
+- Crear `module.json`.
+- Crear `menu.php`.
+- Crear pantalla listado de plantas.
+- Crear pantalla alta/edición de plantas.
+- Crear pantalla de asignación de plantas a usuarios o integrarlo en `admin-usuarios/editar`.
+- Crear permisos asociados.
+
+Permisos propuestos:
+
+- `admin-plantas.access`
+- `admin-plantas.manage`
+
+### 16.3 Crear cámaras A2
 
 Prioridad: **ALTA**.
 
@@ -567,7 +617,7 @@ Pendiente:
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 16.3 Adaptar lectura de cámaras por planta
+### 16.4 Adaptar lectura de cámaras por planta
 
 Prioridad: **ALTA**.
 
@@ -578,7 +628,7 @@ Pendiente:
 - Usuarios con una sola planta no deberían elegir.
 - Usuarios con varias plantas podrán elegir planta activa.
 
-### 16.4 Adaptar flujo plegado individual
+### 16.5 Adaptar flujo plegado individual
 
 Prioridad: **ALTA**.
 
@@ -589,7 +639,7 @@ Pendiente:
 - Permitir ubicar un único palet plegado.
 - Insertar `source_type = plegado`.
 
-### 16.5 Validación real en A2
+### 16.6 Validación real en A2
 
 Prioridad: **ALTA**.
 
@@ -682,7 +732,7 @@ El módulo `camaras-ubicacion`:
 Ahora toca:
 
 ```txt
-preparar multi-planta real, con usuarios de una o varias plantas, y plegado individual para probar A2 sin romper A1.
+crear el módulo común de plantas, asignar plantas a usuarios, preparar cámaras A2 y adaptar el flujo de plegado individual.
 ```
 
 ---
@@ -692,7 +742,7 @@ preparar multi-planta real, con usuarios de una o varias plantas, y plegado indi
 Opción recomendada:
 
 ```txt
-SQL MULTI-PLANTA RELACIONAL + CÁMARAS A2 + FLUJO PLEGADO INDIVIDUAL
+MÓDULO ADMIN-PLANTAS + SQL MULTI-PLANTA RELACIONAL + CÁMARAS A2 + FLUJO PLEGADO INDIVIDUAL
 ```
 
 Antes de ejecutar SQL:
@@ -700,5 +750,7 @@ Antes de ejecutar SQL:
 1. Hacer copia/export.
 2. Confirmar que `erp_plegados_mirror.almacen = 02` corresponde a A2.
 3. Confirmar nombres/códigos de cámaras A2.
-4. Ejecutar cambios pequeños.
-5. Probar con un palet plegado real en A2.
+4. Crear estructura de plantas.
+5. Crear módulo `admin-plantas`.
+6. Probar asignación de usuarios a plantas.
+7. Probar con un palet plegado real en A2.
