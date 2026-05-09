@@ -145,6 +145,47 @@ $router->get('/admin-modulos', function () {
     require __DIR__ . '/modules/admin-modulos/index.php';
     renderLayout($content);
 });
+$router->get('/admin-plantas', function () {
+    $manager = new ModuleManager();
+    $visibleModules = $manager->getVisibleModulesForUser();
+
+    if (!in_array('admin-plantas', $visibleModules)) {
+        http_response_code(403);
+        renderLayout('<h1>403</h1><p>No tienes acceso</p>');
+        return;
+    }
+
+    require __DIR__ . '/modules/admin-plantas/index.php';
+    renderLayout($content);
+});
+$router->post('/admin-plantas', function () {
+    require __DIR__ . '/modules/admin-plantas/index.php';
+    renderLayout($content);
+});
+$router->get('/admin-plantas/crear', function () {
+    require __DIR__ . '/modules/admin-plantas/crear.php';
+    renderLayout($content);
+});
+$router->post('/admin-plantas/crear', function () {
+    require __DIR__ . '/modules/admin-plantas/crear.php';
+    renderLayout($content);
+});
+$router->get('/admin-plantas/editar', function () {
+    require __DIR__ . '/modules/admin-plantas/editar.php';
+    renderLayout($content);
+});
+$router->post('/admin-plantas/editar', function () {
+    require __DIR__ . '/modules/admin-plantas/editar.php';
+    renderLayout($content);
+});
+$router->get('/admin-plantas/usuarios', function () {
+    require __DIR__ . '/modules/admin-plantas/usuarios.php';
+    renderLayout($content);
+});
+$router->post('/admin-plantas/usuarios', function () {
+    require __DIR__ . '/modules/admin-plantas/usuarios.php';
+    renderLayout($content);
+});
 $router->get('/camaras-ubicacion', function () {
     $manager = new ModuleManager();
     $visibleModules = $manager->getVisibleModulesForUser();
