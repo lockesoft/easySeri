@@ -87,8 +87,10 @@ Columnas verificadas en `core_users`:
 
 Conclusión:
 
-- ❌ `core_users` todavía no tiene campo de planta.
-- ✔ Si queremos asociar usuario a A1/A2, hay que añadir un campo nuevo o una tabla relacional.
+- ❌ `core_users` todavía no tiene campo ni relación de planta.
+- ✔ Hay usuarios que pueden necesitar acceso a una sola planta.
+- ✔ Hay usuarios que pueden necesitar acceso a varias plantas.
+- ✔ No se debe resolver multi-planta solo con un campo único obligatorio en `core_users`.
 
 ### Base de datos cámaras / legacy
 
@@ -335,8 +337,12 @@ Nota importante:
 - ✔ La prueba real actual se realizará en planta A2.
 - ✔ En planta A2 ahora solo hay palets de plegado para probar.
 - ✔ El diseño debe contemplar que los palets puedan pertenecer o ubicarse en A1 o A2.
-- ✔ Cada usuario podrá estar asociado a una planta de trabajo, por ejemplo A1 o A2.
-- ✔ Las búsquedas, listados, cámaras, ubicaciones y validaciones deberán tener en cuenta la planta del usuario o la planta seleccionada.
+- ✔ Un usuario puede tener acceso a una sola planta.
+- ✔ Un usuario puede tener acceso a varias plantas.
+- ✔ No se debe modelar el acceso de usuario a planta únicamente con un campo simple obligatorio.
+- ✔ Debe existir una planta activa de trabajo para la pantalla de escaneo.
+- ✔ Si el usuario solo tiene una planta, la planta activa se seleccionará automáticamente.
+- ✔ Si el usuario tiene varias plantas, deberá poder elegir planta activa o tener una planta por defecto.
 
 ### Tipos de palets / origen operativo
 
@@ -363,7 +369,7 @@ Acción futura:
 - Mantener estructura de tablas.
 - No borrar nada sin copia previa y revisión de tablas reales.
 
-### 12.2 Planta del usuario
+### 12.2 Acceso de usuarios a plantas
 
 Estado: **PENDIENTE**.
 
@@ -371,11 +377,31 @@ Hecho verificado:
 
 - `core_users` no tiene campo de planta.
 
-Acción futura recomendada:
+Decisión corregida:
 
-- Añadir campo `plant` o `planta` en `easyseri.core_users`.
-- Valores propuestos: `A1`, `A2`.
-- Definir si hay usuarios multi-planta mediante permiso especial.
+- ❌ No basta con añadir solo `core_users.plant` como solución final.
+- ✔ Hay que permitir usuarios con acceso a A1, A2 o ambas.
+
+Diseño recomendado:
+
+- Crear catálogo de plantas.
+- Crear tabla relacional usuario-planta.
+- Añadir opcionalmente planta por defecto del usuario.
+
+Modelo recomendado:
+
+```sql
+core_plants
+core_user_plants
+core_users.default_plant_id
+```
+
+Ventaja:
+
+- Usuario de A1: una relación.
+- Usuario de A2: una relación.
+- Usuario A1+A2: dos relaciones.
+- Planta activa se decide por defecto o por selección.
 
 ### 12.3 Planta de cámaras
 
@@ -388,7 +414,7 @@ Hecho verificado:
 
 Acción futura recomendada:
 
-- Añadir campo `plant` o `planta` en `ubicacion.cameras`.
+- Añadir campo `plant_code` o `plant_id` en `ubicacion.cameras`.
 - Marcar cámaras actuales como `A1`.
 - Crear después cámaras A2.
 
@@ -435,7 +461,8 @@ El módulo cámaras debe evolucionar para trabajar correctamente con:
 
 - Planta A1.
 - Planta A2.
-- Usuarios asociados a una planta.
+- Usuarios asociados a una o varias plantas.
+- Planta activa de trabajo.
 - Palets de plegado en A1/A2.
 - Palets de campo en A1/A2.
 - Cámaras asociadas a planta.
@@ -479,7 +506,11 @@ INSERT nueva posición
 ```txt
 usuario easySeri
   ↓
-planta del usuario o planta seleccionada: A2
+obtener plantas permitidas del usuario
+  ↓
+si solo tiene una planta: usarla como planta activa
+  ↓
+si tiene varias plantas: elegir planta activa
   ↓
 escaneo de palet
   ↓
@@ -489,7 +520,7 @@ leer erp_plegados_mirror.almacen = 02
   ↓
 confirmar equivalencia 02 = A2
   ↓
-mostrar solo cámaras/filas de A2
+mostrar solo cámaras/filas de la planta activa
   ↓
 confirmar ubicación individual
   ↓
@@ -512,13 +543,15 @@ Añadir soporte mínimo multi-planta y flujo de plegado individual para validar 
 
 ## 16. Tareas de Fase 4.0
 
-### 16.1 SQL estructural mínimo
+### 16.1 SQL estructural mínimo multi-planta
 
 Prioridad: **ALTA**.
 
 Pendiente preparar y ejecutar con copia previa:
 
-- Añadir planta a `easyseri.core_users`.
+- Crear catálogo de plantas en `easyseri`.
+- Crear relación usuario-planta en `easyseri`.
+- Permitir planta por defecto opcional en `core_users`.
 - Añadir planta a `ubicacion.cameras`.
 - Marcar cámaras actuales como A1.
 - No tocar todavía `placements` salvo necesidad verificada.
@@ -541,8 +574,9 @@ Prioridad: **ALTA**.
 Pendiente:
 
 - `cameras.php` debe filtrar por planta activa.
-- La planta activa vendrá del usuario o de selección autorizada.
-- Usuarios normales solo deberían ver su planta.
+- La planta activa vendrá de las plantas permitidas del usuario.
+- Usuarios con una sola planta no deberían elegir.
+- Usuarios con varias plantas podrán elegir planta activa.
 
 ### 16.4 Adaptar flujo plegado individual
 
@@ -564,7 +598,8 @@ Pendiente:
 - Escaneo real de palet plegado.
 - Ubicación en cámara/fila A2.
 - Movimiento real entre posiciones A2.
-- Confirmar que A1 no se ve ni se usa desde usuario A2, salvo permiso especial.
+- Confirmar que A1 no se ve ni se usa desde usuario solo A2.
+- Confirmar que usuarios multi-planta pueden elegir A1/A2 correctamente.
 
 ---
 
@@ -606,9 +641,9 @@ El riesgo aparecerá al crear cámaras A2.
 Mitigación:
 
 - Asociar cámaras a planta.
-- Asociar usuario a planta.
+- Asociar usuarios a una o varias plantas.
+- Trabajar siempre con planta activa.
 - Filtrar cámaras/filas por planta activa.
-- Permitir multi-planta solo con permiso específico.
 
 ### Riesgo 6 — Mezcla de origen plegado/campo
 
@@ -647,7 +682,7 @@ El módulo `camaras-ubicacion`:
 Ahora toca:
 
 ```txt
-preparar multi-planta y plegado individual para poder probar A2 sin romper A1.
+preparar multi-planta real, con usuarios de una o varias plantas, y plegado individual para probar A2 sin romper A1.
 ```
 
 ---
@@ -657,7 +692,7 @@ preparar multi-planta y plegado individual para poder probar A2 sin romper A1.
 Opción recomendada:
 
 ```txt
-SQL ESTRUCTURAL MÍNIMO + CÁMARAS A2 + FLUJO PLEGADO INDIVIDUAL
+SQL MULTI-PLANTA RELACIONAL + CÁMARAS A2 + FLUJO PLEGADO INDIVIDUAL
 ```
 
 Antes de ejecutar SQL:
