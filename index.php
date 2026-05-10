@@ -228,11 +228,11 @@ $router->post('/camaras-ubicacion/camaras/guardar', function () {
     require __DIR__ . '/modules/camaras-ubicacion/camaras/guardar.php';
 });
 $router->get('/camaras-ubicacion/camaras/plano', function () {
-    require __DIR__ . '/modules/camaras-ubicacion/camaras/plano.php';
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/plano_v2.php';
     renderLayout($content);
 });
 $router->post('/camaras-ubicacion/camaras/plano', function () {
-    require __DIR__ . '/modules/camaras-ubicacion/camaras/plano.php';
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/plano_v2.php';
     renderLayout($content);
 });
 $router->get('/camaras-ubicacion/scan', function () {
