@@ -32,7 +32,7 @@ Reglas prácticas:
 
 ## 2. Estado actual en vivo
 
-**FASE ACTUAL:** FASE 4.3 — Completar administración de cámaras antes de prueba A2.
+**FASE ACTUAL:** FASE 4.4 — Preparar flujo de plegado individual para prueba A2.
 
 ### Estado real comprobado / documentado
 
@@ -48,14 +48,20 @@ Reglas prácticas:
 - ✔ Asignación de plantas a usuarios creada.
 - ✔ Selector de planta activa creado.
 - ✔ `cameras.php` ya filtra cámaras por planta activa.
-- ✔ Administración inicial de cámaras adaptada desde la app vieja.
+- ✔ Administración dinámica de cámaras adaptada desde la app vieja.
 - ✔ Alta dinámica de cámara crea `camera_positions` automáticamente.
 - ✔ Editor de plano V2 creado con plano físico bajo y a ancho completo.
+- ✔ Edición de datos generales de cámara creada.
 - ✔ Duplicar cámara creado.
 - ✔ Duplicar cámara copia estructura sin copiar ubicaciones ni ocupación.
+- ✔ Prueba desde casa realizada: crear cámara pequeña funciona.
+- ✔ Prueba desde casa realizada: editar plano funciona.
+- ✔ Prueba desde casa realizada: duplicar cámara funciona.
+- ✔ Prueba desde casa realizada: editar datos generales funciona.
+- ✔ Protección multi-planta en confirmación de escaneo creada.
+- ✔ Protección/corrección de movimientos multi-planta creada.
+- ✔ Aviso visual creado para palets ubicados en otra planta.
 - ✔ Documento específico creado: `docs/DISENO_EDITOR_CAMARAS.md`.
-- ⚠ Pendiente añadir edición de datos generales de cámara.
-- ⚠ Pendiente probar duplicado con cámara pequeña.
 - ⚠ Pendiente crear cámaras A2 reales.
 - ⚠ Pendiente validar en planta el filtrado de cámaras por planta activa.
 - ⚠ Pendiente validar escaneo real en planta A2.
@@ -66,7 +72,7 @@ Reglas prácticas:
 ## 3. Documentos de referencia
 
 - `GUIA_PROYECTO.md`: guía viva general del proyecto.
-- `docs/DISENO_EDITOR_CAMARAS.md`: diseño funcional/técnico del nuevo editor visual de cámaras.
+- `docs/DISENO_EDITOR_CAMARAS.md`: diseño funcional/técnico del editor visual de cámaras.
 
 ---
 
@@ -112,77 +118,154 @@ Contiene tablas del módulo cámaras:
 
 ---
 
-## 5. Estado real verificado de cámaras
+## 5. Archivos principales tocados / creados
 
-Tabla: `ubicacion.cameras`.
-
-Columnas verificadas inicialmente:
-
-- `id`
-- `name`
-- `code`
-- `priority`
-- `entry_row`
-- `entry_col`
-- `notes`
-
-Cambio multi-planta aplicado:
-
-- ✔ Se añade `plant_code` en `ubicacion.cameras` mediante migración.
-- ✔ Las cámaras existentes deben quedar marcadas como `A1`.
-- ✔ `modules/camaras-ubicacion/legacy/api/cameras.php` filtra por `plant_code` usando la planta activa del usuario.
-
-Administración dinámica creada:
-
-- `modules/camaras-ubicacion/camaras/index.php`
-- `modules/camaras-ubicacion/camaras/crear.php`
-- `modules/camaras-ubicacion/camaras/guardar.php`
-- `modules/camaras-ubicacion/camaras/plano.php` respaldo
-- `modules/camaras-ubicacion/camaras/plano_v2.php` activo
-- `modules/camaras-ubicacion/camaras/duplicar.php`
-- `modules/camaras-ubicacion/camaras/duplicar_guardar.php`
-
-Cámaras actuales verificadas antes de crear A2:
-
-| id | name | code | priority | Observación |
-|---:|---|---|---:|---|
-| 1 | Camara 4 descarga | Descarga4 | 10 | A1 actual |
-| 2 | Camara 3 descarga | Descarga3 | 9 | A1 actual |
-| 4 | Camara 1 descarga | Descarga1 | 7 | A1 actual |
-| 3 | Camara 2 descarga | Descarga2 | 0 | A1 actual |
-| 5 | Campa | CampaA1 | 0 | A1 actual |
-
-Conclusión:
-
-- ✔ Ahora mismo solo hay cámaras de A1 cargadas.
-- ✔ Ya existe preparación para filtrar por planta activa.
-- ✔ Ya existe administración dinámica de cámaras desde easySeri.
-- ✔ Ya existe duplicado de estructura para preparar A2 sin redibujar desde cero.
-- ⚠ No se puede validar el flujo completo en casa porque requiere prueba real de planta.
-
----
-
-## 6. Duplicar cámara
-
-Estado: **CREADO / PENDIENTE DE PRUEBA FINAL**.
-
-Rutas:
+### Administración de cámaras
 
 ```txt
-/easyseri/camaras-ubicacion/camaras/duplicar?id=...
-/easyseri/camaras-ubicacion/camaras/duplicar/guardar
-```
-
-Archivos:
-
-```txt
+modules/camaras-ubicacion/camaras/index.php
+modules/camaras-ubicacion/camaras/crear.php
+modules/camaras-ubicacion/camaras/guardar.php
+modules/camaras-ubicacion/camaras/editar.php
+modules/camaras-ubicacion/camaras/editar_guardar.php
+modules/camaras-ubicacion/camaras/plano.php       respaldo
+modules/camaras-ubicacion/camaras/plano_v2.php    activo
 modules/camaras-ubicacion/camaras/duplicar.php
 modules/camaras-ubicacion/camaras/duplicar_guardar.php
 ```
 
+### Multi-planta / guards
+
+```txt
+modules/camaras-ubicacion/includes/plant_guard.php
+modules/camaras-ubicacion/legacy/api/cameras.php
+modules/camaras-ubicacion/legacy/api/scan_confirm.php
+modules/camaras-ubicacion/legacy/api/move_confirm.php
+```
+
+### Aviso de traslado entre plantas
+
+```txt
+modules/camaras-ubicacion/legacy/api/pallet_status.php
+modules/camaras-ubicacion/legacy/scan.php
+```
+
+### Rutas
+
+```txt
+index.php
+```
+
+---
+
+## 6. Rutas actuales importantes
+
+### Módulo cámaras
+
+```txt
+/easyseri/camaras-ubicacion
+/easyseri/camaras-ubicacion/scan
+```
+
+### Administración de cámaras
+
+```txt
+/easyseri/camaras-ubicacion/camaras
+/easyseri/camaras-ubicacion/camaras/crear
+/easyseri/camaras-ubicacion/camaras/guardar
+/easyseri/camaras-ubicacion/camaras/editar?id=...
+/easyseri/camaras-ubicacion/camaras/editar/guardar
+/easyseri/camaras-ubicacion/camaras/duplicar?id=...
+/easyseri/camaras-ubicacion/camaras/duplicar/guardar
+/easyseri/camaras-ubicacion/camaras/plano?id=...
+```
+
+### Plantas
+
+```txt
+/easyseri/admin-plantas
+/easyseri/admin-plantas/crear
+/easyseri/admin-plantas/editar?id=...
+/easyseri/admin-plantas/usuarios
+/easyseri/admin-plantas/seleccionar
+```
+
+---
+
+## 7. Estado de administración dinámica de cámaras
+
+### Crear cámara
+
+Estado: **PROBADO Y FUNCIONA**.
+
+Crea:
+
+- Registro en `cameras`.
+- Matriz inicial en `camera_positions`.
+- Todas las celdas nacen como `almacenaje`.
+- Todas las celdas nacen con `max_levels` indicado.
+- Cámara asociada a `plant_code`.
+
+Campos:
+
+- Planta / almacén.
+- Nombre.
+- Código.
+- Prioridad.
+- Filas.
+- Columnas.
+- Niveles.
+- Notas.
+
+### Editor visual `plano_v2.php`
+
+Estado: **PROBADO Y FUNCIONA**.
+
+Permite:
+
+- Pintar celdas como `almacenaje`, `pasillo`, `bloqueada`.
+- Marcar punto de entrada.
+- Cambiar niveles por celda.
+- Seleccionar filas/columnas.
+- Crear filas reales / grupos.
+- Eliminar filas reales / grupos.
+- Resaltar grupos.
+- Ver capacidad, almacenaje, pasillos, bloqueadas y celdas en grupos.
+
+Decisión visual tomada:
+
+```txt
+Los módulos de resumen/herramientas/filas reales quedan arriba.
+El plano físico queda debajo, ocupando todo el ancho disponible.
+El plano físico es la parte más importante de la pantalla.
+```
+
+### Editar cámara
+
+Estado: **PROBADO Y FUNCIONA**.
+
+Permite editar:
+
+- Nombre.
+- Código.
+- Planta / almacén.
+- Prioridad.
+- Notas.
+
+No toca:
+
+- `camera_positions`.
+- `camera_row_groups`.
+- `camera_row_cells`.
+- `placements`.
+
+### Duplicar cámara
+
+Estado: **PROBADO Y FUNCIONA**.
+
 Copia:
 
-- Datos generales básicos a nueva cámara.
+- Datos generales básicos.
 - `camera_positions`.
 - Tipos de celda.
 - Niveles por posición.
@@ -205,51 +288,117 @@ Duplicar cámara A1 → nueva cámara A2 → revisar plano → ajustar diferenci
 
 ---
 
-## 7. Estado real verificado de filas de cámara
+## 8. Estado real de cámaras y A2
 
-Endpoint revisado:
+Cámaras actuales verificadas inicialmente antes de crear A2:
 
-- `modules/camaras-ubicacion/legacy/api/camera_rows.php`
-
-Funcionamiento actual:
-
-- Recibe `camera_id`.
-- Busca grupos en `camera_row_groups` por `camera_id`.
-- Calcula huecos libres usando `camera_row_cells`, `camera_positions` y `placements`.
-
-Conclusión:
-
-- ✔ Las filas dependen de la cámara seleccionada.
-- ✔ Si las cámaras están bien separadas por `plant_code`, las filas quedan separadas indirectamente.
-- ⚠ Aun así, más adelante habrá que validar en `scan_confirm.php` y `move_confirm.php` que la cámara destino pertenece a la planta activa, para evitar envíos manipulados o errores.
-
----
-
-## 8. Estado real verificado de placements
-
-Tabla: `ubicacion.placements`.
-
-Dato importante:
-
-- ✔ `source_type` existe.
-- ✔ `source_type` permite `entrada` o `plegado`.
+| id | name | code | priority | Observación |
+|---:|---|---|---:|---|
+| 1 | Camara 4 descarga | Descarga4 | 10 | A1 actual |
+| 2 | Camara 3 descarga | Descarga3 | 9 | A1 actual |
+| 4 | Camara 1 descarga | Descarga1 | 7 | A1 actual |
+| 3 | Camara 2 descarga | Descarga2 | 0 | A1 actual |
+| 5 | Campa | CampaA1 | 0 | A1 actual |
 
 Conclusión:
 
-- ✔ La tabla ya está preparada parcialmente para distinguir origen: campo/entrada frente a plegado.
-- ❌ `placements` no tiene campo de planta.
-- ✔ La planta puede deducirse por la cámara mediante `cameras.plant_code`.
-- Recomendación: no duplicar planta en `placements` de momento salvo necesidad real.
+- ✔ Actualmente solo se habían verificado cámaras A1 reales.
+- ✔ Ya se puede crear o duplicar cámaras A2 desde easySeri.
+- ⚠ Pendiente crear cámaras A2 reales definitivas.
+- ⚠ Pendiente validar en planta que al seleccionar A2 no aparecen cámaras A1.
 
 ---
 
-## 9. Estado real verificado de plegados
+## 9. Estado multi-planta en escaneo / movimientos
+
+### Listado de cámaras
+
+`modules/camaras-ubicacion/legacy/api/cameras.php`:
+
+- Usa `PlantService`.
+- Lee planta activa del usuario.
+- Devuelve solo cámaras con `cameras.plant_code = planta_activa`.
+
+### Confirmación de ubicación nueva
+
+`modules/camaras-ubicacion/legacy/api/scan_confirm.php`:
+
+- Valida que `camera_id` destino pertenece a la planta activa.
+- Valida que `row_group_id` pertenece a esa cámara.
+- Evita insertar ubicaciones en cámaras de otra planta por JSON manipulado o error de frontend.
+
+### Movimiento de palets
+
+`modules/camaras-ubicacion/legacy/api/move_confirm.php`:
+
+Regla final correcta:
+
+```txt
+Destino: siempre debe pertenecer a la planta activa.
+Origen: puede venir de otra planta.
+Mover fila completa: solo dentro de la planta activa.
+```
+
+Motivo:
+
+- Puede ocurrir que fruta ubicada en A2 se traslade físicamente a A1.
+- Al leerla en A1 debe poder reubicarse en A1.
+- El sistema debe avisar, cerrar la ubicación anterior y crear la nueva en la planta activa.
+
+---
+
+## 10. Aviso de palet ubicado en otra planta
+
+Estado: **CREADO / PENDIENTE DE VALIDACIÓN EN PLANTA**.
+
+`pallet_status.php` ahora devuelve `place_context` cuando el palet tiene ubicación activa:
+
+```json
+{
+  "place_context": {
+    "camera_id": 1,
+    "camera_name": "Camara 4 descarga",
+    "camera_code": "Descarga4",
+    "plant_code": "A2",
+    "row_idx": 10,
+    "col_idx": 3,
+    "level_idx": 1,
+    "row_group_id": 5,
+    "row_label": "Fila 1",
+    "row_count": 12,
+    "active_plant_code": "A1",
+    "same_as_active_plant": false
+  }
+}
+```
+
+`scan.php` muestra aviso si el palet está en una planta diferente a la activa:
+
+```txt
+⚠ Atención: este palet ya estaba ubicado en otra planta.
+Ubicación actual: Planta A2 / Cámara X / Fila Y / F10-C3 · Nivel 1.
+Si confirmas, se cerrará esa ubicación anterior y se reubicará en la planta activa A1.
+```
+
+También repite el aviso en la pantalla de confirmación.
+
+---
+
+## 11. Estado real verificado de plegados
 
 Tabla: `ubicacion.erp_plegados_mirror`.
 
-Valor real verificado:
+Valor real verificado por el usuario:
 
-- `SELECT DISTINCT almacen FROM erp_plegados_mirror` devuelve: `02`.
+```sql
+SELECT DISTINCT almacen FROM erp_plegados_mirror;
+```
+
+Resultado:
+
+```txt
+02
+```
 
 Conclusión:
 
@@ -260,353 +409,165 @@ Conclusión:
 
 ---
 
-## 10. Endpoints funcionales / modificados
+## 12. Estado de flujo plegado individual
+
+Estado: **PENDIENTE**.
+
+Hecho:
+
+- `erp_plegados_mirror` existe.
+- `pallet_status.php` detecta `mode = plegado`.
+- `placements.source_type` admite `plegado`.
+- `move_confirm.php` ya contempla `source_type = plegado` en movimiento.
+
+Pendiente importante:
+
+- Cuando `pallet_status.php` devuelve `mode = plegado`, no debe tratarse como entrada completa.
+- Debe ubicarse solo el palet plegado leído.
+- Debe mostrarse información clara del plegado.
+- Debe insertarse en `placements` con `source_type = 'plegado'`.
+- Hay que revisar si `entrada_num` se deja como cadena vacía para plegado o si conviene permitir `NULL` en futura migración.
+
+Este es el siguiente bloque de desarrollo recomendado.
+
+---
+
+## 13. Estado de endpoints
 
 ### Lectura
 
-- ✔ `pallet_status.php`
-- ✔ `entry_counts.php`
-- ✔ `camera_rows.php`
-- ✔ `cameras.php` modificado para filtrar por planta activa.
+- ✔ `pallet_status.php` — detecta campo/plegado y devuelve contexto de ubicación.
+- ✔ `entry_counts.php` — orientado a entradas de campo.
+- ✔ `camera_rows.php` — filas por cámara.
+- ✔ `cameras.php` — filtra por planta activa.
 
 ### Escritura
 
-- ✔ `scan_confirm.php`
-- ✔ `move_confirm.php`
-
-Nota importante:
-
-- `entry_counts.php` está orientado a entradas de campo (`erp_palets_mirror`).
-- Para plegados individuales, no se debe depender de `entrada_num` como si fuese campo.
-- `cameras.php` requiere que exista `ubicacion.cameras.plant_code`.
-
----
-
-## 11. Decisiones importantes tomadas
-
-### Plantas / almacenes
-
-- ✔ Se crea módulo común `admin-plantas`.
-- ✔ Las plantas/almacenes de trabajo son dinámicas.
-- ✔ Un usuario puede tener una o varias plantas asignadas.
-- ✔ Debe existir una planta activa de trabajo.
-- ✔ Cámaras debe consumir esa planta activa.
-- ✔ Al crear cámaras nuevas, se debe seleccionar planta/almacén.
-- ✔ No se debe hardcodear que todas las cámaras son A1.
-- ✔ No se debe hardcodear que A2 equivale siempre a `almacen = 02` hasta validarlo en planta/ERP.
-
-### Administración de cámaras
-
-- ✔ La creación de cámaras debe ser dinámica como en la app vieja.
-- ✔ No basta con un CRUD simple de nombre/código/planta.
-- ✔ Al crear cámara se deben crear posiciones en `camera_positions`.
-- ✔ El editor debe mantener pintura de celdas, niveles, entrada y filas reales.
-- ✔ El plano físico debe ocupar la zona principal y más grande de la pantalla.
-- ✔ Duplicar cámara es clave para crear A2 desde estructuras existentes sin copiar ocupación.
-- ⚠ Falta editar datos generales de cámara.
-
-### Base de datos legacy cámaras
-
-- ❌ No usar `db()` del core en legacy.
-- ✔ Usar `camaras_db()` siempre.
-
-### Estrategia legacy
-
-- ❌ No reescribir lógica legacy de golpe.
-- ✔ Adaptar progresivamente.
-- ✔ Mantener funcionalidad existente mientras se integra en easySeri.
-
----
-
-## 12. Problemas detectados / pendientes
-
-### 12.1 Datos inconsistentes de prueba
-
-Estado: **PENDIENTE**.
-
-Acción futura:
-
-- Hacer reset controlado de datos.
-- Limpiar `placements` de prueba.
-- Limpiar estados incoherentes.
-- Mantener estructura de tablas.
-- No borrar nada sin copia previa y revisión de tablas reales.
-
-### 12.2 Validación de selector/planta activa en cámaras
-
-Estado: **PENDIENTE DE VALIDACIÓN EN PLANTA**.
-
-Hecho:
-
-- `PlantService` existe.
-- Selector de planta activa existe.
-- `cameras.php` usa planta activa.
+- ✔ `scan_confirm.php` — ubica entradas de campo y valida destino por planta activa.
+- ✔ `move_confirm.php` — mueve palets con destino validado por planta activa y origen abierto para traslados entre plantas.
 
 Pendiente:
 
-- Probar en planta con usuario asignado a A1.
-- Probar en planta con usuario asignado a A2.
-- Confirmar que con planta A1 aparecen cámaras A1.
-- Confirmar que con planta A2 no aparecen cámaras A1.
-- Crear cámaras A2 y confirmar que aparecen solo en A2.
-
-### 12.3 Editor visual de cámaras
-
-Estado: **V2 CREADO / PENDIENTE DE PRUEBA CON CÁMARA REAL**.
-
-Hecho:
-
-- Plano físico ahora queda debajo, ocupando todo el ancho disponible.
-- Módulos de resumen/herramientas/filas reales quedan arriba.
-- Se mantiene la lógica de escritura en las tablas actuales.
-
-Pendiente:
-
-- Probar con cámara pequeña.
-- Ajustar tamaño de celdas si hace falta.
-- Ajustar altura del plano si hace falta.
-- Revisar usabilidad real con cámara grande.
-
-### 12.4 Planta de cámaras
-
-Estado: **PENDIENTE DE COMPLETAR CON A2**.
-
-Hecho verificado:
-
-- Todas las cámaras actuales son A1.
-- `cameras.php` filtra por planta activa.
-
-Acción futura recomendada:
-
-- Crear cámaras A2 reales desde duplicado o desde alta nueva.
-- Definir códigos.
-- Definir prioridades.
-- Definir filas/posiciones si aplica.
-
-### 12.5 Flujo plegado individual
-
-Estado: **PENDIENTE**.
-
-Hecho verificado:
-
-- `erp_plegados_mirror` existe.
-- `placements.source_type` admite `plegado`.
-- El flujo actual de ubicación está más orientado a entrada de campo.
-
-Acción futura recomendada:
-
-- Crear/adaptar flujo de ubicación de plegado individual.
-- Insertar `placements` con `source_type = 'plegado'`.
-- Usar `entrada_num = ''` o revisar si conviene permitir `NULL` en el futuro.
+- Adaptar `scan_confirm.php` o crear endpoint específico para ubicar plegado individual.
 
 ---
 
-## 13. Arquitectura actual
+## 14. Pruebas realizadas desde casa
 
-### Core easySeri
-
-- Auth.
-- Permisos.
-- Router.
-- Layout.
-- Módulos dinámicos.
-- Menú por permisos.
-- `PlantService` para plantas permitidas y planta activa.
-
-### Módulo plantas
-
-Módulo: `admin-plantas`.
-
-Responsabilidad:
-
-- Gestión del catálogo de plantas.
-- Alta de plantas.
-- Edición de plantas.
-- Activación/desactivación de plantas.
-- Asignación de plantas a usuarios.
-- Definición de planta por defecto del usuario.
-- Selección de planta activa.
-
-### Módulo cámaras
-
-- Módulo `camaras-ubicacion` integrado.
-- Pantalla legacy embebida en iframe.
-- APIs legacy adaptadas.
-- Administración dinámica de cámaras.
-- Editor visual de plano V2.
-- Duplicado de cámaras sin ocupación.
-- Base de datos independiente para cámaras.
-- Usuario easySeri usado en operaciones adaptadas.
-- `cameras.php` consume la planta activa definida por `PlantService`.
-
----
-
-## 14. Flujo real validado / pendiente
-
-### Flujo administración de cámaras
+Realizadas y funcionando:
 
 ```txt
-/camaras-ubicacion/camaras
-  ↓
-/camaras-ubicacion/camaras/crear
-  ↓
-/camaras-ubicacion/camaras/guardar
-  ↓
-INSERT cameras
-  ↓
-INSERT camera_positions
-  ↓
-/camaras-ubicacion/camaras/plano?id=...
-  ↓
-pintar celdas / niveles / entrada / filas reales
+crear cámara pequeña
+probar plano visual
+probar duplicar cámara
+probar editar datos generales
 ```
 
-Estado:
-
-- ✔ Base funcional creada.
-- ✔ Editor visual V2 creado.
-- ✔ Duplicado creado.
-- ⚠ Pendiente probar a fondo con cámara pequeña.
-
-### Flujo duplicar cámara
+No validado todavía desde casa porque requiere planta/escaneo real:
 
 ```txt
-/camaras-ubicacion/camaras
-  ↓
-Duplicar
-  ↓
-/camaras-ubicacion/camaras/duplicar?id=...
-  ↓
-seleccionar planta destino y datos nueva cámara
-  ↓
-/camaras-ubicacion/camaras/duplicar/guardar
-  ↓
-INSERT cameras
-  ↓
-COPY camera_positions
-  ↓
-COPY camera_row_groups
-  ↓
-COPY camera_row_cells apuntando a nuevas posiciones
-  ↓
-NO copiar placements
-```
-
-Estado:
-
-- ✔ Creado.
-- ⚠ Pendiente prueba manual.
-
-### Flujo scan campo actual
-
-```txt
-scan.php
-  ↓
-pallet_status.php
-  ↓
-entry_counts.php
-  ↓
-cameras.php filtrado por planta activa
-  ↓
-camera_rows.php
-  ↓
-scan_confirm.php
-  ↓
-INSERT placements
-```
-
-Estado:
-
-- ⚠ Pendiente validar en planta después del cambio de `cameras.php`.
-
-### Flujo pendiente para plegado A2
-
-```txt
-usuario easySeri
-  ↓
-obtener plantas permitidas del usuario
-  ↓
-si solo tiene una planta: usarla como planta activa
-  ↓
-si tiene varias plantas: elegir planta activa
-  ↓
-escaneo de palet
-  ↓
-detectar source = plegado
-  ↓
-leer erp_plegados_mirror.almacen = 02
-  ↓
-confirmar equivalencia 02 = A2
-  ↓
-mostrar solo cámaras/filas de la planta activa
-  ↓
-confirmar ubicación individual
-  ↓
-INSERT placements con source_type = plegado
+selector A1/A2 en uso real de planta
+escaneo físico con cámara del dispositivo
+filtrado real de cámaras por planta activa
+reubicación A2 → A1 con aviso
+ubicación de plegados reales en A2
 ```
 
 ---
 
-## 15. Siguiente fase
+## 15. Pendientes para la próxima sesión
 
-**FASE 4.3 — Completar administración de cámaras**
+### 15.1 Adaptar flujo de plegado individual
+
+Prioridad: **ALTA**.
 
 Objetivo:
 
 ```txt
-Cerrar herramientas básicas de administración de cámaras antes de crear A2 y antes de tocar el flujo de plegados.
+Poder escanear un palet de plegado en A2 y ubicar solo ese palet individual, sin tratarlo como entrada de campo.
+```
+
+Puntos a revisar al retomar:
+
+- `modules/camaras-ubicacion/legacy/api/pallet_status.php`
+- `modules/camaras-ubicacion/legacy/scan.php`
+- `modules/camaras-ubicacion/legacy/api/scan_confirm.php`
+- Posible endpoint nuevo: `scan_confirm_plegado.php` o ampliación segura de `scan_confirm.php`.
+
+Reglas deseadas:
+
+- Si `mode = plegado`, mostrar datos de `erp_plegados_mirror`.
+- No llamar a `entry_counts.php` como si fuera campo.
+- No requerir `entrada_num` real.
+- Seleccionar cámara y fila de planta activa.
+- Insertar una sola línea en `placements`.
+- `source_type = 'plegado'`.
+- `pallet_num = pallet_num` leído.
+- `entrada_num` de momento podría ir como `''` si la columna sigue `NOT NULL`, salvo que se decida migración a `NULL`.
+
+### 15.2 Crear cámaras A2 reales
+
+Prioridad: **ALTA**.
+
+Opciones:
+
+- Crear desde cero con editor visual.
+- Duplicar estructura A1 y ajustar diferencias.
+
+Pendiente decidir:
+
+- Nombres reales.
+- Códigos reales.
+- Prioridad.
+- Filas/columnas/niveles.
+- Pasillos/bloqueadas.
+- Filas reales.
+
+### 15.3 Validar en planta
+
+Prioridad: **ALTA**.
+
+Checklist en planta:
+
+```txt
+1. Seleccionar planta A1.
+2. Confirmar que aparecen cámaras A1.
+3. Seleccionar planta A2.
+4. Confirmar que no aparecen cámaras A1.
+5. Crear o duplicar cámara A2 real.
+6. Escanear plegado real en A2.
+7. Confirmar que muestra datos de plegado.
+8. Confirmar que permite ubicar solo ese palet.
+9. Probar traslado desde otra planta y verificar aviso.
+10. Confirmar que no se mezclan destinos entre A1/A2.
 ```
 
 ---
 
-## 16. Tareas siguientes
+## 16. Archivos a subir si no están subidos todavía
 
-### 16.1 Añadir edición de datos generales de cámara
+Últimos cambios relevantes:
 
-Prioridad: **ALTA**.
+```txt
+GUIA_PROYECTO.md
+modules/camaras-ubicacion/legacy/api/pallet_status.php
+modules/camaras-ubicacion/legacy/scan.php
+modules/camaras-ubicacion/legacy/api/move_confirm.php
+```
 
-Pendiente:
+Si no se subieron antes también:
 
-- Editar nombre.
-- Editar código.
-- Editar planta/almacén con control de permisos.
-- Editar prioridad.
-- Editar notas.
-- No tocar posiciones ni filas reales desde esta pantalla.
-
-### 16.2 Validar duplicado
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- Duplicar cámara pequeña.
-- Confirmar nueva cámara creada.
-- Confirmar posiciones copiadas.
-- Confirmar grupos copiados.
-- Confirmar que no hay placements copiados.
-
-### 16.3 Crear cámaras A2
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- Definir cámaras reales de A2.
-- Definir códigos.
-- Definir prioridades.
-- Definir filas/posiciones si aplica.
-
-### 16.4 Adaptar flujo plegado individual
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- Si `pallet_status.php` devuelve `mode = plegado`, no usar flujo de entrada completa.
-- Mostrar datos de plegado.
-- Permitir ubicar un único palet plegado.
-- Insertar `source_type = plegado`.
+```txt
+modules/camaras-ubicacion/includes/plant_guard.php
+modules/camaras-ubicacion/legacy/api/scan_confirm.php
+modules/camaras-ubicacion/camaras/editar.php
+modules/camaras-ubicacion/camaras/editar_guardar.php
+modules/camaras-ubicacion/camaras/duplicar.php
+modules/camaras-ubicacion/camaras/duplicar_guardar.php
+modules/camaras-ubicacion/camaras/plano_v2.php
+modules/camaras-ubicacion/camaras/index.php
+index.php
+```
 
 ---
 
@@ -620,33 +581,27 @@ Mitigación:
 - Copia previa.
 - SQL documentado.
 
-### Riesgo 2 — Legacy funcional pero no completamente integrado
+### Riesgo 2 — A2 todavía no validado físicamente
 
 Mitigación:
 
-- Mantener iframe hasta validar en planta.
-- Integrar progresivamente.
+- No dar por hecho equivalencias.
+- Validar `almacen = 02` antes de automatizar reglas definitivas.
+- Crear cámaras A2 reales y probar con palets reales.
 
-### Riesgo 3 — Mezcla futura de plantas A1/A2
+### Riesgo 3 — Mezcla de plantas
 
-Ahora no hay mezcla porque solo existen cámaras A1.
+Mitigación actual:
 
-El riesgo aparecerá al crear cámaras A2.
+- Cámara destino siempre validada contra planta activa.
+- Listado de cámaras filtrado por planta activa.
+- Aviso visual si un palet viene ubicado desde otra planta.
 
-Mitigación:
+### Riesgo 4 — Plegado tratado como campo
 
-- Asociar cámaras a planta.
-- Asociar usuarios a una o varias plantas.
-- Trabajar siempre con planta activa.
-- Filtrar cámaras/filas por planta activa.
-- Validar también en `scan_confirm.php` y `move_confirm.php` que la cámara destino pertenece a la planta activa.
+Mitigación pendiente:
 
-### Riesgo 4 — Mezcla de origen plegado/campo
-
-Mitigación:
-
-- Usar `source_type`.
-- Validar mirrors reales antes de tocar código.
+- Adaptar flujo específico de plegado individual.
 
 ---
 
@@ -667,39 +622,43 @@ No se debe refactorizar algo crítico si todavía no está validado en planta.
 
 El módulo `camaras-ubicacion`:
 
-- ✔ Ya funciona.
-- ✔ Ya se integra con easySeri.
-- ✔ Ya carga la pantalla de escaneo.
-- ✔ Ya consulta endpoints.
-- ✔ Ya inserta ubicaciones para flujo de entrada.
-- ✔ Ya mueve palets.
-- ✔ Ya tiene `source_type` preparado para `entrada` y `plegado`.
-- ✔ Ya tiene filtro de cámaras por planta activa en `cameras.php`.
+- ✔ Ya funciona dentro de easySeri.
 - ✔ Ya tiene administración dinámica de cámaras.
 - ✔ Ya tiene editor visual V2.
-- ✔ Ya tiene duplicado de cámaras sin ocupación.
-- ⚠ Falta edición de datos generales de cámara.
-
-Ahora toca:
-
-```txt
-cerrar la administración de cámaras y después crear/probar cámaras A2.
-```
+- ✔ Ya permite crear, editar, duplicar y configurar planos.
+- ✔ Esas funciones administrativas ya fueron probadas desde casa y funcionan.
+- ✔ Ya tiene base multi-planta.
+- ✔ Ya filtra cámaras por planta activa.
+- ✔ Ya valida destino por planta activa.
+- ✔ Ya permite reubicar desde otra planta avisando.
+- ⚠ Falta adaptar el flujo de plegado individual.
+- ⚠ Falta crear/probar cámaras A2 reales.
+- ⚠ Falta validar todo en planta.
 
 ---
 
 ## 20. Siguiente paso recomendado
 
-Opción recomendada:
+Opción recomendada para la próxima sesión:
 
 ```txt
-AÑADIR EDICIÓN DE DATOS GENERALES DE CÁMARA
+ADAPTAR FLUJO DE PLEGADO INDIVIDUAL
 ```
 
-Antes de seguir con escaneo A2:
+Motivo:
 
-1. Editar datos generales de cámara.
-2. Probar alta nueva.
-3. Probar duplicado.
-4. Crear cámaras A2 reales.
-5. Validar que `cameras.php` solo devuelve cámaras de la planta activa.
+```txt
+La prueba en planta A2 ahora mismo será con plegados.
+Si no adaptamos este flujo, el sistema puede intentar tratar un plegado como entrada de campo.
+```
+
+Orden sugerido al retomar:
+
+```txt
+1. Revisar estado real de scan.php y pallet_status.php.
+2. Confirmar cómo responde ahora un palet de plegado.
+3. Adaptar interfaz para modo plegado.
+4. Adaptar confirmación para insertar un único palet con source_type='plegado'.
+5. Probar desde casa con datos de mirror si hay palet de plegado conocido.
+6. Dejar pendiente solo validación física en A2.
+```
