@@ -48,6 +48,11 @@ ob_start();
     <div class="alert alert-danger">Error cargando cámaras: <?= e($error) ?></div>
 <?php endif; ?>
 
+<div class="alert alert-info">
+    Consejo: para crear cámaras de otra planta con la misma estructura, usa <strong>Duplicar</strong>.
+    Se copiará el plano, niveles y filas reales, pero no las ubicaciones ni ocupación actual.
+</div>
+
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">
@@ -81,6 +86,7 @@ ob_start();
                     <td><?= e($c['notes'] ?? '') ?></td>
                     <td class="text-nowrap">
                         <a class="btn btn-sm btn-outline-primary" href="/easyseri/camaras-ubicacion/camaras/plano?id=<?= (int)$c['id'] ?>">🧩 Plano</a>
+                        <a class="btn btn-sm btn-outline-success" href="/easyseri/camaras-ubicacion/camaras/duplicar?id=<?= (int)$c['id'] ?>">⧉ Duplicar</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
