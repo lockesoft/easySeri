@@ -32,7 +32,7 @@ Reglas prácticas:
 
 ## 2. Estado actual en vivo
 
-**FASE ACTUAL:** FASE 4.1 — Administración de cámaras por planta/almacén y validación posterior en planta.
+**FASE ACTUAL:** FASE 4.2 — Mejorar editor visual de cámaras sin perder funcionalidad legacy.
 
 ### Estado real comprobado / documentado
 
@@ -48,8 +48,12 @@ Reglas prácticas:
 - ✔ Asignación de plantas a usuarios creada.
 - ✔ Selector de planta activa creado.
 - ✔ `cameras.php` ya filtra cámaras por planta activa.
-- ⚠ Pendiente crear administración de cámaras desde easySeri.
-- ⚠ Pendiente poder crear cámaras asociadas a una planta/almacén.
+- ✔ Administración inicial de cámaras adaptada desde la app vieja.
+- ✔ Alta dinámica de cámara crea `camera_positions` automáticamente.
+- ✔ Editor de plano inicial permite pintar celdas, niveles, entrada y filas reales.
+- ✔ Documento específico creado: `docs/DISENO_EDITOR_CAMARAS.md`.
+- ⚠ El editor visual actual funciona como base, pero su diseño no es definitivo.
+- ⚠ Pendiente mejorar estética, usabilidad, velocidad y validaciones.
 - ⚠ Pendiente crear cámaras A2 reales.
 - ⚠ Pendiente validar en planta el filtrado de cámaras por planta activa.
 - ⚠ Pendiente validar escaneo real en planta A2.
@@ -57,7 +61,14 @@ Reglas prácticas:
 
 ---
 
-## 3. Separación real de bases de datos
+## 3. Documentos de referencia
+
+- `GUIA_PROYECTO.md`: guía viva general del proyecto.
+- `docs/DISENO_EDITOR_CAMARAS.md`: diseño funcional/técnico del nuevo editor visual de cámaras.
+
+---
+
+## 4. Separación real de bases de datos
 
 ### Base de datos core easySeri
 
@@ -99,7 +110,7 @@ Contiene tablas del módulo cámaras:
 
 ---
 
-## 4. Estado real verificado de cámaras
+## 5. Estado real verificado de cámaras
 
 Tabla: `ubicacion.cameras`.
 
@@ -119,6 +130,13 @@ Cambio multi-planta aplicado:
 - ✔ Las cámaras existentes deben quedar marcadas como `A1`.
 - ✔ `modules/camaras-ubicacion/legacy/api/cameras.php` filtra por `plant_code` usando la planta activa del usuario.
 
+Administración dinámica creada:
+
+- `modules/camaras-ubicacion/camaras/index.php`
+- `modules/camaras-ubicacion/camaras/crear.php`
+- `modules/camaras-ubicacion/camaras/guardar.php`
+- `modules/camaras-ubicacion/camaras/plano.php`
+
 Cámaras actuales verificadas antes de crear A2:
 
 | id | name | code | priority | Observación |
@@ -133,13 +151,13 @@ Conclusión:
 
 - ✔ Ahora mismo solo hay cámaras de A1 cargadas.
 - ✔ Ya existe preparación para filtrar por planta activa.
-- ❌ Todavía no existe una pantalla administrativa para crear/editar cámaras desde easySeri.
-- ⚠ Al crear cámaras nuevas se debe elegir a qué planta/almacén pertenecen.
+- ✔ Ya existe administración inicial de cámaras desde easySeri.
+- ⚠ El diseño visual todavía debe mejorarse.
 - ⚠ No se puede validar el flujo completo en casa porque requiere prueba real de planta.
 
 ---
 
-## 5. Estado real verificado de filas de cámara
+## 6. Estado real verificado de filas de cámara
 
 Endpoint revisado:
 
@@ -159,7 +177,7 @@ Conclusión:
 
 ---
 
-## 6. Estado real verificado de placements
+## 7. Estado real verificado de placements
 
 Tabla: `ubicacion.placements`.
 
@@ -177,7 +195,7 @@ Conclusión:
 
 ---
 
-## 7. Estado real verificado de plegados
+## 8. Estado real verificado de plegados
 
 Tabla: `ubicacion.erp_plegados_mirror`.
 
@@ -194,41 +212,7 @@ Conclusión:
 
 ---
 
-## 8. Estado real verificado de entradas de campo
-
-Tabla: `ubicacion.erp_entradas_mirror`.
-
-Valor real verificado:
-
-- `SELECT DISTINCT almacen_nombre FROM erp_entradas_mirror` devuelve: `ALMACEN A1`.
-
-Conclusión:
-
-- ✔ En este momento las entradas de campo visibles en mirror corresponden a `ALMACEN A1`.
-- ✔ Esto confirma que la parte de campo venía trabajando con A1.
-- ⚠ Para A2/campo hará falta comprobar qué valor real aparece cuando existan entradas de campo A2.
-
----
-
-## 9. Estado real verificado de moves_log
-
-Tabla: `ubicacion.moves_log`.
-
-Tipos válidos:
-
-- `move_row`
-- `move_entry`
-- `move_pallet`
-
-Conclusión:
-
-- ✔ `move_confirm.php` puede registrar movimientos usando tipos existentes.
-- ❌ `scan_confirm.php` no debe registrar todavía `scan_case1`/`scan_case2` porque esos tipos no existen.
-- ⚠ Si se quiere auditar ubicaciones iniciales, habrá que ampliar el enum o crear otra tabla de auditoría.
-
----
-
-## 10. Endpoints funcionales / modificados
+## 9. Endpoints funcionales / modificados
 
 ### Lectura
 
@@ -250,7 +234,7 @@ Nota importante:
 
 ---
 
-## 11. Decisiones importantes tomadas
+## 10. Decisiones importantes tomadas
 
 ### Plantas / almacenes
 
@@ -265,15 +249,11 @@ Nota importante:
 
 ### Administración de cámaras
 
-Decisión pendiente de implementación:
-
-- Crear dentro de `camaras-ubicacion` una administración de cámaras.
-- Permitirá listar cámaras.
-- Permitirá crear cámaras.
-- Permitirá editar cámaras.
-- Permitirá activar/ordenar si se decide añadir campo para ello.
-- Toda cámara deberá tener `plant_code` asociado.
-- La pantalla deberá permitir elegir entre plantas activas de `core_plants`.
+- ✔ La creación de cámaras debe ser dinámica como en la app vieja.
+- ✔ No basta con un CRUD simple de nombre/código/planta.
+- ✔ Al crear cámara se deben crear posiciones en `camera_positions`.
+- ✔ El editor debe mantener pintura de celdas, niveles, entrada y filas reales.
+- ✔ El diseño visual actual debe mejorarse antes de considerarlo definitivo.
 
 ### Base de datos legacy cámaras
 
@@ -286,17 +266,11 @@ Decisión pendiente de implementación:
 - ✔ Adaptar progresivamente.
 - ✔ Mantener funcionalidad existente mientras se integra en easySeri.
 
-### Tipos de palets / origen operativo
-
-- ✔ En la prueba actual de planta solo hay palets de plegado.
-- ✔ A futuro el sistema debe soportar tanto palets de plegado como palets de campo.
-- ✔ Ambos tipos podrán existir en A1 o en A2.
-
 ---
 
-## 12. Problemas detectados / pendientes
+## 11. Problemas detectados / pendientes
 
-### 12.1 Datos inconsistentes de prueba
+### 11.1 Datos inconsistentes de prueba
 
 Estado: **PENDIENTE**.
 
@@ -308,7 +282,7 @@ Acción futura:
 - Mantener estructura de tablas.
 - No borrar nada sin copia previa y revisión de tablas reales.
 
-### 12.2 Validación de selector/planta activa en cámaras
+### 11.2 Validación de selector/planta activa en cámaras
 
 Estado: **PENDIENTE DE VALIDACIÓN EN PLANTA**.
 
@@ -326,37 +300,25 @@ Pendiente:
 - Confirmar que con planta A2 no aparecen cámaras A1.
 - Crear cámaras A2 y confirmar que aparecen solo en A2.
 
-Motivo de pendiente:
+### 11.3 Editor visual de cámaras
 
-- El usuario está en casa y no puede hacer escaneo/prueba real de planta en este momento.
-
-### 12.3 Administración de cámaras
-
-Estado: **PENDIENTE**.
+Estado: **BASE FUNCIONAL CREADA / PENDIENTE DE REDISEÑO UX**.
 
 Necesidad:
 
-- Poder crear cámaras desde easySeri.
-- Poder editar cámaras desde easySeri.
-- Poder asignar cada cámara a una planta/almacén.
-- Poder crear cámaras A2 sin tocar SQL manualmente.
+- Mejorar estructura visual.
+- Mejorar estética.
+- Mejorar velocidad de edición.
+- Mejorar claridad de herramientas.
+- Añadir resumen de capacidad.
+- Añadir validaciones de cámara incompleta.
+- Preparar opción futura de duplicar cámara.
 
-Pantallas recomendadas:
+Documento específico:
 
-- `/camaras-ubicacion/camaras`
-- `/camaras-ubicacion/camaras/crear`
-- `/camaras-ubicacion/camaras/editar?id=...`
+- `docs/DISENO_EDITOR_CAMARAS.md`
 
-Campos mínimos:
-
-- Nombre.
-- Código.
-- Planta/almacén (`plant_code`).
-- Prioridad.
-- Punto de entrada (`entry_row`, `entry_col`) opcional.
-- Notas.
-
-### 12.4 Planta de cámaras
+### 11.4 Planta de cámaras
 
 Estado: **PENDIENTE DE COMPLETAR CON A2**.
 
@@ -367,12 +329,12 @@ Hecho verificado:
 
 Acción futura recomendada:
 
-- Crear cámaras A2 reales desde la futura administración.
+- Crear cámaras A2 reales desde la administración.
 - Definir códigos.
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 12.5 Flujo plegado individual
+### 11.5 Flujo plegado individual
 
 Estado: **PENDIENTE**.
 
@@ -390,7 +352,7 @@ Acción futura recomendada:
 
 ---
 
-## 13. Arquitectura actual
+## 12. Arquitectura actual
 
 ### Core easySeri
 
@@ -421,14 +383,39 @@ Responsabilidad:
 - Módulo `camaras-ubicacion` integrado.
 - Pantalla legacy embebida en iframe.
 - APIs legacy adaptadas.
+- Administración dinámica inicial de cámaras.
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
 - `cameras.php` consume la planta activa definida por `PlantService`.
-- Pendiente administración de cámaras por planta/almacén.
+- Pendiente rediseño UX del editor visual.
 
 ---
 
-## 14. Flujo real validado / pendiente
+## 13. Flujo real validado / pendiente
+
+### Flujo administración de cámaras
+
+```txt
+/camaras-ubicacion/camaras
+  ↓
+/camaras-ubicacion/camaras/crear
+  ↓
+/camaras-ubicacion/camaras/guardar
+  ↓
+INSERT cameras
+  ↓
+INSERT camera_positions
+  ↓
+/camaras-ubicacion/camaras/plano?id=...
+  ↓
+pintar celdas / niveles / entrada / filas reales
+```
+
+Estado:
+
+- ✔ Base funcional creada.
+- ⚠ Pendiente mejorar diseño UX.
+- ⚠ Pendiente probar a fondo con cámara pequeña.
 
 ### Flujo scan campo actual
 
@@ -451,22 +438,6 @@ INSERT placements
 Estado:
 
 - ⚠ Pendiente validar en planta después del cambio de `cameras.php`.
-
-### Flujo move actual
-
-```txt
-scan.php / flujo movimiento
-  ↓
-move_confirm.php
-  ↓
-UPDATE placement anterior con removed_at
-  ↓
-INSERT nueva posición
-```
-
-Estado:
-
-- ⚠ Pendiente validar que el destino no permita mezcla de plantas cuando existan cámaras A2.
 
 ### Flujo pendiente para plegado A2
 
@@ -496,47 +467,49 @@ INSERT placements con source_type = plegado
 
 ---
 
-## 15. Siguiente fase
+## 14. Siguiente fase
 
-**FASE 4.1 — Administración de cámaras por planta/almacén**
+**FASE 4.2 — Rediseño UX del editor visual de cámaras**
 
 Objetivo:
 
 ```txt
-Crear pantallas para gestionar cámaras y asociarlas a una planta/almacén antes de crear cámaras A2.
+Convertir el editor funcional actual en una herramienta visual intuitiva, rápida y agradable para crear cámaras reales sin perder funcionalidad.
 ```
 
 ---
 
-## 16. Tareas siguientes
+## 15. Tareas siguientes
 
-### 16.1 Crear administración de cámaras
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- Crear listado de cámaras.
-- Crear alta de cámara.
-- Crear edición de cámara.
-- Seleccionar planta/almacén desde `core_plants`.
-- Guardar `plant_code` en `ubicacion.cameras`.
-- Mostrar claramente la planta de cada cámara.
-
-### 16.2 Validar en planta filtrado por planta activa
+### 15.1 Rediseñar editor visual
 
 Prioridad: **ALTA**.
 
 Pendiente:
 
-- Subir `cameras.php` modificado.
-- Confirmar que existe `core/plants/PlantService.php` en servidor.
-- Confirmar que existe `ubicacion.cameras.plant_code`.
-- Seleccionar A1 y comprobar que aparecen cámaras A1.
-- Seleccionar A2 y comprobar que no aparecen cámaras A1.
-- Crear cámaras A2 y comprobar que aparecen solo con A2.
+- Cabecera limpia con cámara/planta.
+- Panel lateral de herramientas.
+- Plano central amplio.
+- Resumen de capacidad.
+- Validaciones visibles.
+- Acciones agrupadas.
+- Mejor visibilidad de grupos/fila real.
+- Mejor estética general.
 
-### 16.3 Crear cámaras A2
+### 15.2 Validar alta dinámica
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- Crear cámara pequeña de prueba.
+- Confirmar que se generan posiciones.
+- Pintar celdas.
+- Crear filas reales.
+- Marcar entrada.
+- Verificar datos en tablas.
+
+### 15.3 Crear cámaras A2
 
 Prioridad: **ALTA**.
 
@@ -547,7 +520,7 @@ Pendiente:
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 16.4 Adaptar flujo plegado individual
+### 15.4 Adaptar flujo plegado individual
 
 Prioridad: **ALTA**.
 
@@ -560,7 +533,7 @@ Pendiente:
 
 ---
 
-## 17. Riesgos conocidos
+## 16. Riesgos conocidos
 
 ### Riesgo 1 — Datos de prueba mezclados
 
@@ -600,7 +573,7 @@ Mitigación:
 
 ---
 
-## 18. Filosofía del proyecto
+## 17. Filosofía del proyecto
 
 ```txt
 Primero funcional.
@@ -613,7 +586,7 @@ No se debe refactorizar algo crítico si todavía no está validado en planta.
 
 ---
 
-## 19. Conclusión actual
+## 18. Conclusión actual
 
 El módulo `camaras-ubicacion`:
 
@@ -625,28 +598,29 @@ El módulo `camaras-ubicacion`:
 - ✔ Ya mueve palets.
 - ✔ Ya tiene `source_type` preparado para `entrada` y `plegado`.
 - ✔ Ya tiene filtro de cámaras por planta activa en `cameras.php`.
-- ⚠ Falta administración de cámaras por planta/almacén.
+- ✔ Ya tiene administración dinámica inicial de cámaras.
+- ⚠ Falta rediseñar el editor visual para que sea realmente usable.
 
 Ahora toca:
 
 ```txt
-crear administración de cámaras para poder dar de alta cámaras A2 y cualquier cámara futura vinculada a una planta/almacén.
+mejorar el editor visual de cámaras sin cambiar las tablas ni perder funcionalidad legacy.
 ```
 
 ---
 
-## 20. Siguiente paso recomendado
+## 19. Siguiente paso recomendado
 
 Opción recomendada:
 
 ```txt
-CREAR ADMINISTRACIÓN DE CÁMARAS POR PLANTA/ALMACÉN
+REDISEÑAR PLANO.PHP COMO EDITOR VISUAL INDUSTRIAL LIMPIO
 ```
 
 Antes de seguir con escaneo A2:
 
-1. Crear listado de cámaras.
-2. Crear formulario de alta/edición.
-3. Asociar cámara a planta/almacén.
-4. Crear cámaras A2.
+1. Mejorar editor visual.
+2. Probar cámara pequeña.
+3. Validar tablas generadas.
+4. Crear cámaras A2 reales.
 5. Validar que `cameras.php` solo devuelve cámaras de la planta activa.
