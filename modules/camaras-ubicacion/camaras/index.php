@@ -86,6 +86,7 @@ ob_start();
                     <td><?= e($c['notes'] ?? '') ?></td>
                     <td class="text-nowrap">
                         <a class="btn btn-sm btn-outline-primary" href="/easyseri/camaras-ubicacion/camaras/plano?id=<?= (int)$c['id'] ?>">🧩 Plano</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="/easyseri/camaras-ubicacion/camaras/editar?id=<?= (int)$c['id'] ?>">✏️ Editar</a>
                         <a class="btn btn-sm btn-outline-success" href="/easyseri/camaras-ubicacion/camaras/duplicar?id=<?= (int)$c['id'] ?>">⧉ Duplicar</a>
                     </td>
                 </tr>
