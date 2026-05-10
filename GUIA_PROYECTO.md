@@ -32,7 +32,7 @@ Reglas prácticas:
 
 ## 2. Estado actual en vivo
 
-**FASE ACTUAL:** FASE 4.2 — Mejorar editor visual de cámaras sin perder funcionalidad legacy.
+**FASE ACTUAL:** FASE 4.3 — Completar administración de cámaras antes de prueba A2.
 
 ### Estado real comprobado / documentado
 
@@ -50,10 +50,12 @@ Reglas prácticas:
 - ✔ `cameras.php` ya filtra cámaras por planta activa.
 - ✔ Administración inicial de cámaras adaptada desde la app vieja.
 - ✔ Alta dinámica de cámara crea `camera_positions` automáticamente.
-- ✔ Editor de plano inicial permite pintar celdas, niveles, entrada y filas reales.
+- ✔ Editor de plano V2 creado con plano físico bajo y a ancho completo.
+- ✔ Duplicar cámara creado.
+- ✔ Duplicar cámara copia estructura sin copiar ubicaciones ni ocupación.
 - ✔ Documento específico creado: `docs/DISENO_EDITOR_CAMARAS.md`.
-- ⚠ El editor visual actual funciona como base, pero su diseño no es definitivo.
-- ⚠ Pendiente mejorar estética, usabilidad, velocidad y validaciones.
+- ⚠ Pendiente añadir edición de datos generales de cámara.
+- ⚠ Pendiente probar duplicado con cámara pequeña.
 - ⚠ Pendiente crear cámaras A2 reales.
 - ⚠ Pendiente validar en planta el filtrado de cámaras por planta activa.
 - ⚠ Pendiente validar escaneo real en planta A2.
@@ -135,7 +137,10 @@ Administración dinámica creada:
 - `modules/camaras-ubicacion/camaras/index.php`
 - `modules/camaras-ubicacion/camaras/crear.php`
 - `modules/camaras-ubicacion/camaras/guardar.php`
-- `modules/camaras-ubicacion/camaras/plano.php`
+- `modules/camaras-ubicacion/camaras/plano.php` respaldo
+- `modules/camaras-ubicacion/camaras/plano_v2.php` activo
+- `modules/camaras-ubicacion/camaras/duplicar.php`
+- `modules/camaras-ubicacion/camaras/duplicar_guardar.php`
 
 Cámaras actuales verificadas antes de crear A2:
 
@@ -151,13 +156,56 @@ Conclusión:
 
 - ✔ Ahora mismo solo hay cámaras de A1 cargadas.
 - ✔ Ya existe preparación para filtrar por planta activa.
-- ✔ Ya existe administración inicial de cámaras desde easySeri.
-- ⚠ El diseño visual todavía debe mejorarse.
+- ✔ Ya existe administración dinámica de cámaras desde easySeri.
+- ✔ Ya existe duplicado de estructura para preparar A2 sin redibujar desde cero.
 - ⚠ No se puede validar el flujo completo en casa porque requiere prueba real de planta.
 
 ---
 
-## 6. Estado real verificado de filas de cámara
+## 6. Duplicar cámara
+
+Estado: **CREADO / PENDIENTE DE PRUEBA FINAL**.
+
+Rutas:
+
+```txt
+/easyseri/camaras-ubicacion/camaras/duplicar?id=...
+/easyseri/camaras-ubicacion/camaras/duplicar/guardar
+```
+
+Archivos:
+
+```txt
+modules/camaras-ubicacion/camaras/duplicar.php
+modules/camaras-ubicacion/camaras/duplicar_guardar.php
+```
+
+Copia:
+
+- Datos generales básicos a nueva cámara.
+- `camera_positions`.
+- Tipos de celda.
+- Niveles por posición.
+- `camera_row_groups`.
+- `camera_row_cells` reconstruyendo referencias a las nuevas posiciones.
+- Punto de entrada.
+
+No copia:
+
+- `placements`.
+- Ocupación actual.
+- Movimientos.
+- Histórico.
+
+Uso recomendado:
+
+```txt
+Duplicar cámara A1 → nueva cámara A2 → revisar plano → ajustar diferencias físicas → validar en planta.
+```
+
+---
+
+## 7. Estado real verificado de filas de cámara
 
 Endpoint revisado:
 
@@ -177,7 +225,7 @@ Conclusión:
 
 ---
 
-## 7. Estado real verificado de placements
+## 8. Estado real verificado de placements
 
 Tabla: `ubicacion.placements`.
 
@@ -195,7 +243,7 @@ Conclusión:
 
 ---
 
-## 8. Estado real verificado de plegados
+## 9. Estado real verificado de plegados
 
 Tabla: `ubicacion.erp_plegados_mirror`.
 
@@ -212,7 +260,7 @@ Conclusión:
 
 ---
 
-## 9. Endpoints funcionales / modificados
+## 10. Endpoints funcionales / modificados
 
 ### Lectura
 
@@ -234,7 +282,7 @@ Nota importante:
 
 ---
 
-## 10. Decisiones importantes tomadas
+## 11. Decisiones importantes tomadas
 
 ### Plantas / almacenes
 
@@ -253,7 +301,9 @@ Nota importante:
 - ✔ No basta con un CRUD simple de nombre/código/planta.
 - ✔ Al crear cámara se deben crear posiciones en `camera_positions`.
 - ✔ El editor debe mantener pintura de celdas, niveles, entrada y filas reales.
-- ✔ El diseño visual actual debe mejorarse antes de considerarlo definitivo.
+- ✔ El plano físico debe ocupar la zona principal y más grande de la pantalla.
+- ✔ Duplicar cámara es clave para crear A2 desde estructuras existentes sin copiar ocupación.
+- ⚠ Falta editar datos generales de cámara.
 
 ### Base de datos legacy cámaras
 
@@ -268,9 +318,9 @@ Nota importante:
 
 ---
 
-## 11. Problemas detectados / pendientes
+## 12. Problemas detectados / pendientes
 
-### 11.1 Datos inconsistentes de prueba
+### 12.1 Datos inconsistentes de prueba
 
 Estado: **PENDIENTE**.
 
@@ -282,7 +332,7 @@ Acción futura:
 - Mantener estructura de tablas.
 - No borrar nada sin copia previa y revisión de tablas reales.
 
-### 11.2 Validación de selector/planta activa en cámaras
+### 12.2 Validación de selector/planta activa en cámaras
 
 Estado: **PENDIENTE DE VALIDACIÓN EN PLANTA**.
 
@@ -300,25 +350,24 @@ Pendiente:
 - Confirmar que con planta A2 no aparecen cámaras A1.
 - Crear cámaras A2 y confirmar que aparecen solo en A2.
 
-### 11.3 Editor visual de cámaras
+### 12.3 Editor visual de cámaras
 
-Estado: **BASE FUNCIONAL CREADA / PENDIENTE DE REDISEÑO UX**.
+Estado: **V2 CREADO / PENDIENTE DE PRUEBA CON CÁMARA REAL**.
 
-Necesidad:
+Hecho:
 
-- Mejorar estructura visual.
-- Mejorar estética.
-- Mejorar velocidad de edición.
-- Mejorar claridad de herramientas.
-- Añadir resumen de capacidad.
-- Añadir validaciones de cámara incompleta.
-- Preparar opción futura de duplicar cámara.
+- Plano físico ahora queda debajo, ocupando todo el ancho disponible.
+- Módulos de resumen/herramientas/filas reales quedan arriba.
+- Se mantiene la lógica de escritura en las tablas actuales.
 
-Documento específico:
+Pendiente:
 
-- `docs/DISENO_EDITOR_CAMARAS.md`
+- Probar con cámara pequeña.
+- Ajustar tamaño de celdas si hace falta.
+- Ajustar altura del plano si hace falta.
+- Revisar usabilidad real con cámara grande.
 
-### 11.4 Planta de cámaras
+### 12.4 Planta de cámaras
 
 Estado: **PENDIENTE DE COMPLETAR CON A2**.
 
@@ -329,12 +378,12 @@ Hecho verificado:
 
 Acción futura recomendada:
 
-- Crear cámaras A2 reales desde la administración.
+- Crear cámaras A2 reales desde duplicado o desde alta nueva.
 - Definir códigos.
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 11.5 Flujo plegado individual
+### 12.5 Flujo plegado individual
 
 Estado: **PENDIENTE**.
 
@@ -352,7 +401,7 @@ Acción futura recomendada:
 
 ---
 
-## 12. Arquitectura actual
+## 13. Arquitectura actual
 
 ### Core easySeri
 
@@ -383,15 +432,16 @@ Responsabilidad:
 - Módulo `camaras-ubicacion` integrado.
 - Pantalla legacy embebida en iframe.
 - APIs legacy adaptadas.
-- Administración dinámica inicial de cámaras.
+- Administración dinámica de cámaras.
+- Editor visual de plano V2.
+- Duplicado de cámaras sin ocupación.
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
 - `cameras.php` consume la planta activa definida por `PlantService`.
-- Pendiente rediseño UX del editor visual.
 
 ---
 
-## 13. Flujo real validado / pendiente
+## 14. Flujo real validado / pendiente
 
 ### Flujo administración de cámaras
 
@@ -414,8 +464,38 @@ pintar celdas / niveles / entrada / filas reales
 Estado:
 
 - ✔ Base funcional creada.
-- ⚠ Pendiente mejorar diseño UX.
+- ✔ Editor visual V2 creado.
+- ✔ Duplicado creado.
 - ⚠ Pendiente probar a fondo con cámara pequeña.
+
+### Flujo duplicar cámara
+
+```txt
+/camaras-ubicacion/camaras
+  ↓
+Duplicar
+  ↓
+/camaras-ubicacion/camaras/duplicar?id=...
+  ↓
+seleccionar planta destino y datos nueva cámara
+  ↓
+/camaras-ubicacion/camaras/duplicar/guardar
+  ↓
+INSERT cameras
+  ↓
+COPY camera_positions
+  ↓
+COPY camera_row_groups
+  ↓
+COPY camera_row_cells apuntando a nuevas posiciones
+  ↓
+NO copiar placements
+```
+
+Estado:
+
+- ✔ Creado.
+- ⚠ Pendiente prueba manual.
 
 ### Flujo scan campo actual
 
@@ -467,49 +547,46 @@ INSERT placements con source_type = plegado
 
 ---
 
-## 14. Siguiente fase
+## 15. Siguiente fase
 
-**FASE 4.2 — Rediseño UX del editor visual de cámaras**
+**FASE 4.3 — Completar administración de cámaras**
 
 Objetivo:
 
 ```txt
-Convertir el editor funcional actual en una herramienta visual intuitiva, rápida y agradable para crear cámaras reales sin perder funcionalidad.
+Cerrar herramientas básicas de administración de cámaras antes de crear A2 y antes de tocar el flujo de plegados.
 ```
 
 ---
 
-## 15. Tareas siguientes
+## 16. Tareas siguientes
 
-### 15.1 Rediseñar editor visual
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- Cabecera limpia con cámara/planta.
-- Panel lateral de herramientas.
-- Plano central amplio.
-- Resumen de capacidad.
-- Validaciones visibles.
-- Acciones agrupadas.
-- Mejor visibilidad de grupos/fila real.
-- Mejor estética general.
-
-### 15.2 Validar alta dinámica
+### 16.1 Añadir edición de datos generales de cámara
 
 Prioridad: **ALTA**.
 
 Pendiente:
 
-- Crear cámara pequeña de prueba.
-- Confirmar que se generan posiciones.
-- Pintar celdas.
-- Crear filas reales.
-- Marcar entrada.
-- Verificar datos en tablas.
+- Editar nombre.
+- Editar código.
+- Editar planta/almacén con control de permisos.
+- Editar prioridad.
+- Editar notas.
+- No tocar posiciones ni filas reales desde esta pantalla.
 
-### 15.3 Crear cámaras A2
+### 16.2 Validar duplicado
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- Duplicar cámara pequeña.
+- Confirmar nueva cámara creada.
+- Confirmar posiciones copiadas.
+- Confirmar grupos copiados.
+- Confirmar que no hay placements copiados.
+
+### 16.3 Crear cámaras A2
 
 Prioridad: **ALTA**.
 
@@ -520,7 +597,7 @@ Pendiente:
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 15.4 Adaptar flujo plegado individual
+### 16.4 Adaptar flujo plegado individual
 
 Prioridad: **ALTA**.
 
@@ -533,7 +610,7 @@ Pendiente:
 
 ---
 
-## 16. Riesgos conocidos
+## 17. Riesgos conocidos
 
 ### Riesgo 1 — Datos de prueba mezclados
 
@@ -573,7 +650,7 @@ Mitigación:
 
 ---
 
-## 17. Filosofía del proyecto
+## 18. Filosofía del proyecto
 
 ```txt
 Primero funcional.
@@ -586,7 +663,7 @@ No se debe refactorizar algo crítico si todavía no está validado en planta.
 
 ---
 
-## 18. Conclusión actual
+## 19. Conclusión actual
 
 El módulo `camaras-ubicacion`:
 
@@ -598,29 +675,31 @@ El módulo `camaras-ubicacion`:
 - ✔ Ya mueve palets.
 - ✔ Ya tiene `source_type` preparado para `entrada` y `plegado`.
 - ✔ Ya tiene filtro de cámaras por planta activa en `cameras.php`.
-- ✔ Ya tiene administración dinámica inicial de cámaras.
-- ⚠ Falta rediseñar el editor visual para que sea realmente usable.
+- ✔ Ya tiene administración dinámica de cámaras.
+- ✔ Ya tiene editor visual V2.
+- ✔ Ya tiene duplicado de cámaras sin ocupación.
+- ⚠ Falta edición de datos generales de cámara.
 
 Ahora toca:
 
 ```txt
-mejorar el editor visual de cámaras sin cambiar las tablas ni perder funcionalidad legacy.
+cerrar la administración de cámaras y después crear/probar cámaras A2.
 ```
 
 ---
 
-## 19. Siguiente paso recomendado
+## 20. Siguiente paso recomendado
 
 Opción recomendada:
 
 ```txt
-REDISEÑAR PLANO.PHP COMO EDITOR VISUAL INDUSTRIAL LIMPIO
+AÑADIR EDICIÓN DE DATOS GENERALES DE CÁMARA
 ```
 
 Antes de seguir con escaneo A2:
 
-1. Mejorar editor visual.
-2. Probar cámara pequeña.
-3. Validar tablas generadas.
+1. Editar datos generales de cámara.
+2. Probar alta nueva.
+3. Probar duplicado.
 4. Crear cámaras A2 reales.
 5. Validar que `cameras.php` solo devuelve cámaras de la planta activa.
