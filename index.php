@@ -227,6 +227,13 @@ $router->get('/camaras-ubicacion/camaras/crear', function () {
 $router->post('/camaras-ubicacion/camaras/guardar', function () {
     require __DIR__ . '/modules/camaras-ubicacion/camaras/guardar.php';
 });
+$router->get('/camaras-ubicacion/camaras/editar', function () {
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/editar.php';
+    renderLayout($content);
+});
+$router->post('/camaras-ubicacion/camaras/editar/guardar', function () {
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/editar_guardar.php';
+});
 $router->get('/camaras-ubicacion/camaras/duplicar', function () {
     require __DIR__ . '/modules/camaras-ubicacion/camaras/duplicar.php';
     renderLayout($content);
