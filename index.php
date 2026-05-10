@@ -207,6 +207,34 @@ $router->get('/camaras-ubicacion', function () {
     require __DIR__ . '/modules/camaras-ubicacion/index.php';
     renderLayout($content);
 });
+$router->get('/camaras-ubicacion/camaras', function () {
+    $manager = new ModuleManager();
+    $visibleModules = $manager->getVisibleModulesForUser();
+
+    if (!in_array('camaras-ubicacion', $visibleModules)) {
+        http_response_code(403);
+        renderLayout('<h1>403</h1><p>No tienes acceso</p>');
+        return;
+    }
+
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/index.php';
+    renderLayout($content);
+});
+$router->get('/camaras-ubicacion/camaras/crear', function () {
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/crear.php';
+    renderLayout($content);
+});
+$router->post('/camaras-ubicacion/camaras/guardar', function () {
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/guardar.php';
+});
+$router->get('/camaras-ubicacion/camaras/plano', function () {
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/plano.php';
+    renderLayout($content);
+});
+$router->post('/camaras-ubicacion/camaras/plano', function () {
+    require __DIR__ . '/modules/camaras-ubicacion/camaras/plano.php';
+    renderLayout($content);
+});
 $router->get('/camaras-ubicacion/scan', function () {
     $manager = new ModuleManager();
     $visibleModules = $manager->getVisibleModulesForUser();
