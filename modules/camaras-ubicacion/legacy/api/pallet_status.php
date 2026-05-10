@@ -5,18 +5,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../../../core/plants/PlantService.php';
 require_login();
 
 header_remove('X-Powered-By');
 header('Content-Type: application/json; charset=utf-8');
 
-if (!function_exists('camaras_db')) {
-  function camaras_db(): mysqli {
-    global $mysqli;
-    if (!$mysqli instanceof mysqli) throw new RuntimeException('DB cámaras no inicializada');
-    return $mysqli;
-  }
-}
 function out($ok, $data=[], $code=200){
   http_response_code($code);
   echo json_encode(['ok'=>$ok] + $data, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
@@ -86,13 +80,13 @@ function load_row_info(mysqli $db, int $camera_id, int $row_idx, int $col_idx): 
 
   // contar palets activos en esa fila (cámara + row_group)
   $qCnt = $db->prepare("
-    SELECT COUNT(*) 
+    SELECT COUNT(*)
     FROM placements pl
-    JOIN camera_positions cp 
-         ON cp.camera_id = pl.camera_id 
-        AND cp.row_idx   = pl.row_idx 
+    JOIN camera_positions cp
+         ON cp.camera_id = pl.camera_id
+        AND cp.row_idx   = pl.row_idx
         AND cp.col_idx   = pl.col_idx
-    JOIN camera_row_cells crc 
+    JOIN camera_row_cells crc
          ON crc.position_id = cp.id
     WHERE pl.removed_at IS NULL
       AND pl.camera_id  = ?
@@ -113,13 +107,60 @@ function load_row_info(mysqli $db, int $camera_id, int $row_idx, int $col_idx): 
   ];
 }
 
+function load_place_context(mysqli $db, ?array $place, ?array $row_info): ?array {
+  if (!$place) return null;
+
+  $cameraId = (int)$place['camera_id'];
+
+  $ctx = [
+    'camera_id' => $cameraId,
+    'camera_name' => null,
+    'camera_code' => null,
+    'plant_code' => null,
+    'row_idx' => (int)$place['row_idx'],
+    'col_idx' => (int)$place['col_idx'],
+    'level_idx' => (int)$place['level_idx'],
+    'placed_at' => $place['placed_at'] ?? null,
+    'row_group_id' => $row_info['row_group_id'] ?? null,
+    'row_label' => $row_info['label'] ?? null,
+    'row_count' => $row_info['count'] ?? null,
+    'same_as_active_plant' => null,
+    'active_plant_code' => null,
+  ];
+
+  if ($q = $db->prepare("SELECT name, code, plant_code FROM cameras WHERE id=? LIMIT 1")) {
+    $q->bind_param('i', $cameraId);
+    $q->execute();
+    $cam = $q->get_result()->fetch_assoc();
+    $q->close();
+
+    if ($cam) {
+      $ctx['camera_name'] = $cam['name'] ?? null;
+      $ctx['camera_code'] = $cam['code'] ?? null;
+      $ctx['plant_code'] = $cam['plant_code'] ?? null;
+    }
+  }
+
+  try {
+    $activePlant = PlantService::getActivePlantForCurrentUser();
+    if ($activePlant && !empty($activePlant['code'])) {
+      $ctx['active_plant_code'] = (string)$activePlant['code'];
+      $ctx['same_as_active_plant'] = ((string)($ctx['plant_code'] ?? '') === (string)$activePlant['code']);
+    }
+  } catch (Throwable $e) {
+    // No bloqueamos el estado por no poder leer planta activa.
+  }
+
+  return $ctx;
+}
+
 try {
   $code = (string)($_GET['code'] ?? '');
   $code = norm_str($code);
   if ($code==='') out(false, ['error'=>'Falta parámetro code'], 400);
 
-  $db = camaras_db(); 
-$db->set_charset('utf8mb4');
+  $db = camaras_db();
+  $db->set_charset('utf8mb4');
   $cands = build_candidates($code);
   if (empty($cands)) out(false, ['error'=>'Código inválido'], 200);
 
@@ -159,10 +200,12 @@ $db->set_charset('utf8mb4');
   $stPl->close();
   $placed = !!$place;
 
-  // Si está colocado, intentar enriquecer con row_info
+  // Si está colocado, intentar enriquecer con row_info y contexto completo.
   $row_info = null;
+  $place_context = null;
   if ($placed) {
     $row_info = load_row_info($db, (int)$place['camera_id'], (int)$place['row_idx'], (int)$place['col_idx']);
+    $place_context = load_place_context($db, $place, $row_info);
   }
 
   if ($hitCampo) {
@@ -204,7 +247,8 @@ $db->set_charset('utf8mb4');
       'placed'      => $placed,
       'movible'     => true,
       'place'       => $place ?: null,
-      'row_info'    => $row_info,     // <<--- NUEVO
+      'row_info'    => $row_info,
+      'place_context' => $place_context,
       'variedad'    => $variedad,
       'entrada'     => [
         'propietario' => $ent['propietario'] ?? null,
@@ -226,7 +270,8 @@ $db->set_charset('utf8mb4');
     'placed'      => $placed,
     'movible'     => $movible,
     'place'       => $place ?: null,
-    'row_info'    => $row_info,   // <<--- NUEVO
+    'row_info'    => $row_info,
+    'place_context' => $place_context,
     'plegado'     => [
       'tipo'       => $hitPleg['tipo']       ?? null,
       'variedad'   => $hitPleg['variedad']   ?? null,
