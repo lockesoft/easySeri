@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/plant_guard.php';
 
 require_login();
 
@@ -207,6 +208,10 @@ try {
         out(false, ['error' => 'No se pudo identificar usuario actual'], 403);
     }
 
+    if (!camera_belongs_to_active_plant($db, $camera_id)) {
+        out(false, ['error' => active_plant_guard_error()], 403);
+    }
+
     // CASE 1: Ubicar en UNA fila
     if ($case === 1) {
         $rg = (int)($js['row_group_id'] ?? 0);
@@ -214,6 +219,10 @@ try {
 
         if ($rg <= 0) {
             out(false, ['error' => 'Falta row_group_id en case=1'], 400);
+        }
+
+        if (!row_group_belongs_to_camera($db, $rg, $camera_id)) {
+            out(false, ['error' => 'La fila destino no pertenece a la cámara seleccionada'], 403);
         }
 
         $sqlPend = "
@@ -290,10 +299,6 @@ try {
 
         $ins->close();
 
-        // IMPORTANTE:
-        // No insertamos moves_log todavía porque el enum actual no admite scan_case1/scan_case2.
-        // moves_log está congelado hasta revisión completa.
-
         update_pending_summary($db, $entrada);
 
         $db->commit();
@@ -311,6 +316,13 @@ try {
 
         if (!is_array($rows) || !count($rows)) {
             out(false, ['error' => 'Falta rows en case=2'], 400);
+        }
+
+        foreach ($rows as $item) {
+            $rgCheck = (int)($item['row_group_id'] ?? 0);
+            if ($rgCheck <= 0 || !row_group_belongs_to_camera($db, $rgCheck, $camera_id)) {
+                out(false, ['error' => 'Una fila destino no pertenece a la cámara seleccionada'], 403);
+            }
         }
 
         $db->begin_transaction();
@@ -421,10 +433,6 @@ try {
         $ins->close();
         $checkBelongs->close();
         $checkActive->close();
-
-        // IMPORTANTE:
-        // No insertamos moves_log todavía porque el enum actual no admite scan_case1/scan_case2.
-        // moves_log está congelado hasta revisión completa.
 
         update_pending_summary($db, $entrada);
 
