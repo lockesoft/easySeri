@@ -32,7 +32,7 @@ Reglas prácticas:
 
 ## 2. Estado actual en vivo
 
-**FASE ACTUAL:** FASE 4.0 — Crear base multi-planta común antes de prueba A2.
+**FASE ACTUAL:** FASE 4.1 — Administración de cámaras por planta/almacén y validación posterior en planta.
 
 ### Estado real comprobado / documentado
 
@@ -40,17 +40,17 @@ Reglas prácticas:
 - ✔ Login / logout funcionando.
 - ✔ Usuarios, roles, permisos y módulos funcionando.
 - ✔ Módulo `camaras-ubicacion` creado.
-- ✔ Módulo visible en `admin-modulos`.
-- ✔ Módulo visible en menú con permiso `camaras-ubicacion.access`.
 - ✔ Ruta `/easyseri/camaras-ubicacion` funcionando.
 - ✔ Ruta `/easyseri/camaras-ubicacion/scan` funcionando.
-- ✔ Botón desde módulo hacia escaneo funcionando.
 - ✔ Integración legacy funcionando técnicamente.
 - ✔ Módulo común `admin-plantas` creado.
 - ✔ Gestión dinámica de plantas creada.
 - ✔ Asignación de plantas a usuarios creada.
 - ✔ Selector de planta activa creado.
 - ✔ `cameras.php` ya filtra cámaras por planta activa.
+- ⚠ Pendiente crear administración de cámaras desde easySeri.
+- ⚠ Pendiente poder crear cámaras asociadas a una planta/almacén.
+- ⚠ Pendiente crear cámaras A2 reales.
 - ⚠ Pendiente validar en planta el filtrado de cámaras por planta activa.
 - ⚠ Pendiente validar escaneo real en planta A2.
 - ⚠ Pendiente adaptar flujo específico de plegado individual.
@@ -72,17 +72,6 @@ Contiene tablas del core:
 - `core_plants`
 - `core_user_plants`
 
-Resultado verificado:
-
-- `core_users` existe en `easyseri`.
-- `core_users` no existe en `ubicacion`.
-- Usuarios actuales verificados:
-  - Pablo
-  - Fabiola
-  - Josep
-  - Manolo
-  - Vicente Taberner
-
 Modelo multi-planta definido:
 
 ```sql
@@ -99,6 +88,9 @@ Contiene tablas del módulo cámaras:
 
 - `cameras`
 - `placements`
+- `camera_positions`
+- `camera_row_groups`
+- `camera_row_cells`
 - `erp_plegados_mirror`
 - `erp_palets_mirror`
 - `erp_entradas_mirror`
@@ -141,31 +133,35 @@ Conclusión:
 
 - ✔ Ahora mismo solo hay cámaras de A1 cargadas.
 - ✔ Ya existe preparación para filtrar por planta activa.
-- ⚠ No se puede validar en casa porque requiere flujo real de escaneo/cámaras.
-- ⚠ Queda pendiente validarlo en planta.
+- ❌ Todavía no existe una pantalla administrativa para crear/editar cámaras desde easySeri.
+- ⚠ Al crear cámaras nuevas se debe elegir a qué planta/almacén pertenecen.
+- ⚠ No se puede validar el flujo completo en casa porque requiere prueba real de planta.
 
 ---
 
-## 5. Estado real verificado de placements
+## 5. Estado real verificado de filas de cámara
+
+Endpoint revisado:
+
+- `modules/camaras-ubicacion/legacy/api/camera_rows.php`
+
+Funcionamiento actual:
+
+- Recibe `camera_id`.
+- Busca grupos en `camera_row_groups` por `camera_id`.
+- Calcula huecos libres usando `camera_row_cells`, `camera_positions` y `placements`.
+
+Conclusión:
+
+- ✔ Las filas dependen de la cámara seleccionada.
+- ✔ Si las cámaras están bien separadas por `plant_code`, las filas quedan separadas indirectamente.
+- ⚠ Aun así, más adelante habrá que validar en `scan_confirm.php` y `move_confirm.php` que la cámara destino pertenece a la planta activa, para evitar envíos manipulados o errores.
+
+---
+
+## 6. Estado real verificado de placements
 
 Tabla: `ubicacion.placements`.
-
-Columnas verificadas:
-
-- `id`
-- `camera_id`
-- `row_idx`
-- `col_idx`
-- `level_idx`
-- `entrada_num`
-- `source_type`
-- `pallet_num`
-- `placed_at`
-- `placed_by`
-- `removed_at`
-- `removed_source`
-- `created_at`
-- `updated_at`
 
 Dato importante:
 
@@ -181,24 +177,9 @@ Conclusión:
 
 ---
 
-## 6. Estado real verificado de plegados
+## 7. Estado real verificado de plegados
 
 Tabla: `ubicacion.erp_plegados_mirror`.
-
-Columnas verificadas:
-
-- `pallet_num`
-- `tipo`
-- `variedad`
-- `calibres1`
-- `kg_reales`
-- `cajones`
-- `fecha`
-- `almacen`
-- `comentario`
-- `numero_volcador`
-- `src_updated_at`
-- `synced_at`
 
 Valor real verificado:
 
@@ -213,23 +194,9 @@ Conclusión:
 
 ---
 
-## 7. Estado real verificado de entradas de campo
+## 8. Estado real verificado de entradas de campo
 
 Tabla: `ubicacion.erp_entradas_mirror`.
-
-Columnas verificadas:
-
-- `entrada_num`
-- `boleto_id`
-- `boleto_cod`
-- `almacen_nombre`
-- `propietario`
-- `conductor`
-- `matricula`
-- `kg_reales`
-- `fecha_boleto`
-- `synced_at`
-- `src_updated_at`
 
 Valor real verificado:
 
@@ -243,23 +210,9 @@ Conclusión:
 
 ---
 
-## 8. Estado real verificado de moves_log
+## 9. Estado real verificado de moves_log
 
 Tabla: `ubicacion.moves_log`.
-
-Columnas verificadas:
-
-- `id`
-- `moved_at`
-- `moved_by`
-- `type`
-- `src_camera_id`
-- `src_row_group_id`
-- `dest_camera_id`
-- `dest_row_group_id`
-- `entrada_num`
-- `pallets_count`
-- `notes`
 
 Tipos válidos:
 
@@ -272,22 +225,6 @@ Conclusión:
 - ✔ `move_confirm.php` puede registrar movimientos usando tipos existentes.
 - ❌ `scan_confirm.php` no debe registrar todavía `scan_case1`/`scan_case2` porque esos tipos no existen.
 - ⚠ Si se quiere auditar ubicaciones iniciales, habrá que ampliar el enum o crear otra tabla de auditoría.
-
----
-
-## 9. Integración legacy validada
-
-- ✔ Pantalla legacy `scan.php` cargando en iframe.
-- ✔ Cámara funcionando correctamente.
-- ✔ Auth legacy adaptado a easySeri.
-- ✔ DB legacy adaptada a `.env`.
-- ✔ Eliminado conflicto `db()` vs core.
-- ✔ Uso de `camaras_db()` correcto.
-
-Decisión importante:
-
-- ❌ No usar `db()` del core dentro del legacy de cámaras.
-- ✔ Usar `camaras_db()` siempre en legacy cámaras.
 
 ---
 
@@ -315,16 +252,33 @@ Nota importante:
 
 ## 11. Decisiones importantes tomadas
 
+### Plantas / almacenes
+
+- ✔ Se crea módulo común `admin-plantas`.
+- ✔ Las plantas/almacenes de trabajo son dinámicas.
+- ✔ Un usuario puede tener una o varias plantas asignadas.
+- ✔ Debe existir una planta activa de trabajo.
+- ✔ Cámaras debe consumir esa planta activa.
+- ✔ Al crear cámaras nuevas, se debe seleccionar planta/almacén.
+- ✔ No se debe hardcodear que todas las cámaras son A1.
+- ✔ No se debe hardcodear que A2 equivale siempre a `almacen = 02` hasta validarlo en planta/ERP.
+
+### Administración de cámaras
+
+Decisión pendiente de implementación:
+
+- Crear dentro de `camaras-ubicacion` una administración de cámaras.
+- Permitirá listar cámaras.
+- Permitirá crear cámaras.
+- Permitirá editar cámaras.
+- Permitirá activar/ordenar si se decide añadir campo para ello.
+- Toda cámara deberá tener `plant_code` asociado.
+- La pantalla deberá permitir elegir entre plantas activas de `core_plants`.
+
 ### Base de datos legacy cámaras
 
 - ❌ No usar `db()` del core en legacy.
 - ✔ Usar `camaras_db()` siempre.
-
-### Logs de movimientos
-
-- ❌ No tocar `moves_log` en `scan_confirm.php` por ahora.
-- ✔ Permitir `moves_log` en `move_confirm.php` usando solo tipos válidos existentes.
-- ⚠ Pendiente revisar estructura completa de `moves_log` antes de ampliar logs.
 
 ### Estrategia legacy
 
@@ -332,43 +286,11 @@ Nota importante:
 - ✔ Adaptar progresivamente.
 - ✔ Mantener funcionalidad existente mientras se integra en easySeri.
 
-### Integración con SAP / ERP
-
-- ❌ No conectar easySeri directamente a SAP.
-- ✔ Usar mirror mediante `sync_sap.php`.
-
-### Plantas A1 / A2
-
-- ✔ Ahora mismo solo hay cámaras A1 en `cameras`.
-- ✔ La prueba real actual se realizará en planta A2.
-- ✔ En planta A2 ahora solo hay palets de plegado para probar.
-- ✔ El diseño debe contemplar que los palets puedan pertenecer o ubicarse en A1 o A2.
-- ✔ Un usuario puede tener acceso a una sola planta.
-- ✔ Un usuario puede tener acceso a varias plantas.
-- ✔ No se debe modelar el acceso de usuario a planta únicamente con un campo simple obligatorio.
-- ✔ Debe existir una planta activa de trabajo para la pantalla de escaneo.
-- ✔ Si el usuario solo tiene una planta, la planta activa se seleccionará automáticamente.
-- ✔ Si el usuario tiene varias plantas, deberá poder elegir planta activa o tener una planta por defecto.
-
-### Módulo común de plantas
-
-- ✔ Se decide crear un módulo propio `admin-plantas`.
-- ✔ El módulo permite crear plantas de trabajo de forma dinámica.
-- ✔ El módulo permite editar plantas.
-- ✔ El módulo permite activar/desactivar plantas.
-- ✔ El módulo permite asignar una o varias plantas a cada usuario.
-- ✔ El módulo permite modificar las plantas asignadas a cada usuario.
-- ✔ El módulo permite seleccionar planta activa.
-- ✔ Esta gestión será común para todo easySeri, no exclusiva de cámaras.
-
 ### Tipos de palets / origen operativo
 
 - ✔ En la prueba actual de planta solo hay palets de plegado.
 - ✔ A futuro el sistema debe soportar tanto palets de plegado como palets de campo.
 - ✔ Ambos tipos podrán existir en A1 o en A2.
-- ✔ No se debe asumir que un palet pertenece a A1 por defecto.
-- ✔ No se debe asumir que todos los palets son de campo.
-- ✔ No se debe asumir que todos los palets son de plegado.
 
 ---
 
@@ -408,7 +330,33 @@ Motivo de pendiente:
 
 - El usuario está en casa y no puede hacer escaneo/prueba real de planta en este momento.
 
-### 12.3 Planta de cámaras
+### 12.3 Administración de cámaras
+
+Estado: **PENDIENTE**.
+
+Necesidad:
+
+- Poder crear cámaras desde easySeri.
+- Poder editar cámaras desde easySeri.
+- Poder asignar cada cámara a una planta/almacén.
+- Poder crear cámaras A2 sin tocar SQL manualmente.
+
+Pantallas recomendadas:
+
+- `/camaras-ubicacion/camaras`
+- `/camaras-ubicacion/camaras/crear`
+- `/camaras-ubicacion/camaras/editar?id=...`
+
+Campos mínimos:
+
+- Nombre.
+- Código.
+- Planta/almacén (`plant_code`).
+- Prioridad.
+- Punto de entrada (`entry_row`, `entry_col`) opcional.
+- Notas.
+
+### 12.4 Planta de cámaras
 
 Estado: **PENDIENTE DE COMPLETAR CON A2**.
 
@@ -419,12 +367,12 @@ Hecho verificado:
 
 Acción futura recomendada:
 
-- Crear cámaras A2 reales.
+- Crear cámaras A2 reales desde la futura administración.
 - Definir códigos.
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 12.4 Flujo plegado individual
+### 12.5 Flujo plegado individual
 
 Estado: **PENDIENTE**.
 
@@ -468,8 +416,6 @@ Responsabilidad:
 - Definición de planta por defecto del usuario.
 - Selección de planta activa.
 
-Este módulo forma parte del core funcional común de easySeri.
-
 ### Módulo cámaras
 
 - Módulo `camaras-ubicacion` integrado.
@@ -478,17 +424,7 @@ Este módulo forma parte del core funcional común de easySeri.
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
 - `cameras.php` consume la planta activa definida por `PlantService`.
-
-### Requisito multi-planta
-
-El sistema debe evolucionar para trabajar correctamente con:
-
-- Plantas dinámicas, no hardcodeadas exclusivamente a A1/A2.
-- Usuarios asociados a una o varias plantas.
-- Planta activa de trabajo.
-- Palets de plegado por planta.
-- Palets de campo por planta.
-- Cámaras asociadas a planta.
+- Pendiente administración de cámaras por planta/almacén.
 
 ---
 
@@ -562,19 +498,32 @@ INSERT placements con source_type = plegado
 
 ## 15. Siguiente fase
 
-**FASE 4.1 — Validar planta activa en cámaras y preparar flujo plegado individual**
+**FASE 4.1 — Administración de cámaras por planta/almacén**
 
 Objetivo:
 
 ```txt
-Validar que cámaras respeta planta activa y preparar el flujo específico de plegados para A2.
+Crear pantallas para gestionar cámaras y asociarlas a una planta/almacén antes de crear cámaras A2.
 ```
 
 ---
 
 ## 16. Tareas siguientes
 
-### 16.1 Validar en planta filtrado por planta activa
+### 16.1 Crear administración de cámaras
+
+Prioridad: **ALTA**.
+
+Pendiente:
+
+- Crear listado de cámaras.
+- Crear alta de cámara.
+- Crear edición de cámara.
+- Seleccionar planta/almacén desde `core_plants`.
+- Guardar `plant_code` en `ubicacion.cameras`.
+- Mostrar claramente la planta de cada cámara.
+
+### 16.2 Validar en planta filtrado por planta activa
 
 Prioridad: **ALTA**.
 
@@ -587,7 +536,7 @@ Pendiente:
 - Seleccionar A2 y comprobar que no aparecen cámaras A1.
 - Crear cámaras A2 y comprobar que aparecen solo con A2.
 
-### 16.2 Crear cámaras A2
+### 16.3 Crear cámaras A2
 
 Prioridad: **ALTA**.
 
@@ -598,7 +547,7 @@ Pendiente:
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 16.3 Adaptar flujo plegado individual
+### 16.4 Adaptar flujo plegado individual
 
 Prioridad: **ALTA**.
 
@@ -608,18 +557,6 @@ Pendiente:
 - Mostrar datos de plegado.
 - Permitir ubicar un único palet plegado.
 - Insertar `source_type = plegado`.
-
-### 16.4 Validación real en A2
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- Escaneo real de palet plegado.
-- Ubicación en cámara/fila A2.
-- Movimiento real entre posiciones A2.
-- Confirmar que A1 no se ve ni se usa desde usuario solo A2.
-- Confirmar que usuarios multi-planta pueden elegir A1/A2 correctamente.
 
 ---
 
@@ -640,19 +577,7 @@ Mitigación:
 - Mantener iframe hasta validar en planta.
 - Integrar progresivamente.
 
-### Riesgo 3 — Logs incompletos
-
-Mitigación:
-
-- Revisar `moves_log` antes de ampliar.
-
-### Riesgo 4 — Permisos demasiado generales
-
-Mitigación:
-
-- Añadir permisos finos.
-
-### Riesgo 5 — Mezcla futura de plantas A1/A2
+### Riesgo 3 — Mezcla futura de plantas A1/A2
 
 Ahora no hay mezcla porque solo existen cámaras A1.
 
@@ -666,7 +591,7 @@ Mitigación:
 - Filtrar cámaras/filas por planta activa.
 - Validar también en `scan_confirm.php` y `move_confirm.php` que la cámara destino pertenece a la planta activa.
 
-### Riesgo 6 — Mezcla de origen plegado/campo
+### Riesgo 4 — Mezcla de origen plegado/campo
 
 Mitigación:
 
@@ -700,11 +625,12 @@ El módulo `camaras-ubicacion`:
 - ✔ Ya mueve palets.
 - ✔ Ya tiene `source_type` preparado para `entrada` y `plegado`.
 - ✔ Ya tiene filtro de cámaras por planta activa en `cameras.php`.
+- ⚠ Falta administración de cámaras por planta/almacén.
 
 Ahora toca:
 
 ```txt
-validar en planta el filtro por planta activa, crear cámaras A2 y preparar el flujo específico de plegado individual.
+crear administración de cámaras para poder dar de alta cámaras A2 y cualquier cámara futura vinculada a una planta/almacén.
 ```
 
 ---
@@ -714,15 +640,13 @@ validar en planta el filtro por planta activa, crear cámaras A2 y preparar el f
 Opción recomendada:
 
 ```txt
-DETENER CAMBIOS EN CÁMARAS HASTA VALIDAR EN PLANTA EL FILTRO POR PLANTA ACTIVA
+CREAR ADMINISTRACIÓN DE CÁMARAS POR PLANTA/ALMACÉN
 ```
 
-Cuando se vuelva a planta:
+Antes de seguir con escaneo A2:
 
-1. Probar selector de planta activa.
-2. Probar escaneo con planta A1.
-3. Confirmar listado de cámaras A1.
-4. Seleccionar A2.
-5. Confirmar que no aparecen cámaras A1.
-6. Crear cámaras A2.
-7. Probar plegado real en A2.
+1. Crear listado de cámaras.
+2. Crear formulario de alta/edición.
+3. Asociar cámara a planta/almacén.
+4. Crear cámaras A2.
+5. Validar que `cameras.php` solo devuelve cámaras de la planta activa.
