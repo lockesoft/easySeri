@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/plant_guard.php';
 
 require_login();
 
@@ -231,6 +232,12 @@ function update_pending_summary(mysqli $db, string $entrada): void
 try {
     $db = camaras_db();
 
+    $activePlant = PlantService::getActivePlantForCurrentUser();
+    if (!$activePlant || empty($activePlant['code'])) {
+        out(false, ['error' => active_plant_guard_error()], 403);
+    }
+    $activePlantCode = (string)$activePlant['code'];
+
     $in = json_input();
 
     $entrada = isset($in['entrada_num']) ? trim((string)$in['entrada_num']) : '';
@@ -256,12 +263,30 @@ try {
         out(false, ['error' => 'camera_id y row_group_id son requeridos'], 400);
     }
 
+    if (!camera_belongs_to_active_plant($db, $camera_id_dest)) {
+        out(false, ['error' => active_plant_guard_error()], 403);
+    }
+
+    if (!row_group_belongs_to_camera($db, $row_group_dest, $camera_id_dest)) {
+        out(false, ['error' => 'La fila destino no pertenece a la cámara destino'], 403);
+    }
+
     if ($scope === 'selected' && empty($selected)) {
         out(false, ['error' => 'Debes seleccionar palets'], 400);
     }
 
     if ($scope === 'row' && ($camera_id_src <= 0 || $row_group_src <= 0)) {
         out(false, ['error' => 'src_camera_id y src_row_group_id son requeridos para mover fila'], 400);
+    }
+
+    if ($scope === 'row') {
+        if (!camera_belongs_to_active_plant($db, $camera_id_src)) {
+            out(false, ['error' => 'La cámara origen no pertenece a tu planta activa (' . $activePlantCode . ').'], 403);
+        }
+
+        if (!row_group_belongs_to_camera($db, $row_group_src, $camera_id_src)) {
+            out(false, ['error' => 'La fila origen no pertenece a la cámara origen'], 403);
+        }
     }
 
     $candidates = [];
@@ -277,6 +302,9 @@ try {
             JOIN placements pl
               ON pl.pallet_num = p.pallet_num
              AND pl.removed_at IS NULL
+            JOIN cameras c
+              ON c.id = pl.camera_id
+             AND c.plant_code = ?
             WHERE p.entrada_num = ?
             ORDER BY p.pallet_num ASC
         ";
@@ -287,7 +315,7 @@ try {
             out(false, ['error' => 'Prepare candidatos(entry): ' . $db->error], 500);
         }
 
-        $st->bind_param('s', $entrada);
+        $st->bind_param('ss', $activePlantCode, $entrada);
         $st->execute();
         $res = $st->get_result();
 
@@ -299,11 +327,14 @@ try {
 
     } elseif ($scope === 'selected') {
         $ph = implode(',', array_fill(0, count($selected), '?'));
-        $types = str_repeat('s', count($selected));
+        $types = str_repeat('s', count($selected)) . 's';
 
         $sql = "
             SELECT pl.pallet_num
             FROM placements pl
+            JOIN cameras c
+              ON c.id = pl.camera_id
+             AND c.plant_code = ?
             WHERE pl.removed_at IS NULL
               AND pl.pallet_num IN ($ph)
             ORDER BY pl.pallet_num
@@ -315,7 +346,8 @@ try {
             out(false, ['error' => 'Prepare candidatos(selected): ' . $db->error], 500);
         }
 
-        $st->bind_param($types, ...$selected);
+        $params = array_merge([$activePlantCode], $selected);
+        $st->bind_param($types, ...$params);
         $st->execute();
         $res = $st->get_result();
 
@@ -380,7 +412,7 @@ try {
     }
 
     if (empty($candidates)) {
-        out(false, ['error' => 'No hay palets con ubicación activa para mover'], 409);
+        out(false, ['error' => 'No hay palets con ubicación activa para mover en tu planta activa'], 409);
     }
 
     $ph = implode(',', array_fill(0, count($candidates), '?'));
@@ -476,14 +508,16 @@ try {
     $db->begin_transaction();
 
     $ph = implode(',', array_fill(0, count($moving), '?'));
-    $types = str_repeat('s', count($moving));
+    $types = str_repeat('s', count($moving)) . 's';
 
     $sqlClose = "
-        UPDATE placements
-        SET removed_at = NOW(),
-            removed_source = 'manual'
-        WHERE removed_at IS NULL
-          AND pallet_num IN ($ph)
+        UPDATE placements pl
+        JOIN cameras c ON c.id = pl.camera_id
+        SET pl.removed_at = NOW(),
+            pl.removed_source = 'manual'
+        WHERE pl.removed_at IS NULL
+          AND pl.pallet_num IN ($ph)
+          AND c.plant_code = ?
     ";
 
     $stC = $db->prepare($sqlClose);
@@ -493,7 +527,8 @@ try {
         out(false, ['error' => 'Prepare close: ' . $db->error], 500);
     }
 
-    $stC->bind_param($types, ...$moving);
+    $closeParams = array_merge($moving, [$activePlantCode]);
+    $stC->bind_param($types, ...$closeParams);
 
     if (!$stC->execute()) {
         $db->rollback();
@@ -599,8 +634,6 @@ try {
 
     $ins->close();
 
-    // moves_log sí acepta move_row, move_entry y move_pallet.
-    // Se deja logging solo para movimientos, no para scan_case.
     $logType = ($scope === 'row') ? 'move_row' : (($scope === 'selected') ? 'move_pallet' : 'move_entry');
 
     if ($log = $db->prepare("
