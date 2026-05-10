@@ -48,6 +48,7 @@ if ($FULL):
   #preview{width:100%;height:auto;max-height:60vh;background:#000}
   #scanReticle{position:absolute;inset:15% 10%;border:2px dashed rgba(255,255,255,.8);border-radius:.5rem;pointer-events:none}
   #camToolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem}
+  #crossPlantWarning{border-width:2px}
 </style>
 
 <div id="busyOverlay"><div class="text-center"><div class="spinner-border" role="status"></div><div class="mt-2 fw-semibold">Procesando…</div></div></div>
@@ -84,6 +85,7 @@ if ($FULL):
         </div>
       </div>
       <div id="moveRowHint" class="form-text text-muted d-none"></div>
+      <div id="crossPlantWarning" class="alert alert-warning mt-3 mb-0 d-none"></div>
     </div>
 
     <!-- Paso 1: elegir cámara -->
@@ -112,9 +114,9 @@ if ($FULL):
 const API_COUNTS   = 'api/entry_counts.php';
 const API_CAMERAS  = 'api/cameras.php';
 const API_ROWS     = 'api/camera_rows.php';
-const API_CONFIRM  = 'api/scan_confirm.php';  // ubicar (case=1)
-const API_PSTATUS  = 'api/pallet_status.php'; // ahora también devuelve row_info
-const API_MOVE     = 'api/move_confirm.php';  // mover
+const API_CONFIRM  = 'api/scan_confirm.php';
+const API_PSTATUS  = 'api/pallet_status.php';
+const API_MOVE     = 'api/move_confirm.php';
 
 /* Toasts & Busy */
 function showBusy(on){ document.getElementById('busyOverlay').classList.toggle('show', !!on); }
@@ -148,14 +150,32 @@ async function fetchJSON(url, options){
 }
 function arr(v){ return Array.isArray(v) ? v : []; }
 function num(v){ return Number(v) || 0; }
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&quot;',"'":'&#39;'}[m]))}
+function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&quot;',"'":'&#39;'}[m]))}
+function placeContextText(ctx){
+  if (!ctx) return '';
+  const plant = ctx.plant_code || '—';
+  const cam = ctx.camera_name || ('Cámara ' + (ctx.camera_id || '—'));
+  const row = ctx.row_label || 'fila no definida';
+  const pos = `F${ctx.row_idx || '—'}-C${ctx.col_idx || '—'} · Nivel ${ctx.level_idx || '—'}`;
+  return `Planta ${plant} / ${cam} / ${row} / ${pos}`;
+}
+function crossPlantHtml(ctx){
+  if (!ctx || ctx.same_as_active_plant !== false) return '';
+  return `
+    <strong>⚠ Atención: este palet ya estaba ubicado en otra planta.</strong><br>
+    Ubicación actual: <strong>${escapeHtml(placeContextText(ctx))}</strong>.<br>
+    Si confirmas, se cerrará esa ubicación anterior y se reubicará en la planta activa
+    <strong>${escapeHtml(ctx.active_plant_code || '')}</strong>.
+  `;
+}
 
 /* Estado */
-let CURRENT_ENTRY = null;   // {entrada_num,total,pending}
-let CHOSEN_CAMERA = null;   // {id,name}
-let CHOSEN_ROW    = null;   // {row_group_id,label,free}
-let MODE          = 'place';// 'place' | 'move' | 'move_row'
-let SRC_ROW       = null;   // {camera_id,row_group_id,label,count}
+let CURRENT_ENTRY = null;
+let CHOSEN_CAMERA = null;
+let CHOSEN_ROW    = null;
+let MODE          = 'place';
+let SRC_ROW       = null;
+let CURRENT_PLACE_CONTEXT = null;
 
 const scanCard   = document.getElementById('scanCard');
 
@@ -165,6 +185,7 @@ const entryNum   = document.getElementById('entryNum');
 const entryTotal = document.getElementById('entryTotal');
 const entryPend  = document.getElementById('entryPending');
 const extraInfo  = document.getElementById('extraInfo');
+const crossPlantWarning = document.getElementById('crossPlantWarning');
 
 const clearBtn   = document.getElementById('clearBtn');
 const moveRowBtn = document.getElementById('moveRowBtn');
@@ -207,7 +228,7 @@ function applyModeStyles(){
   });
 }
 
-/* Cámara helpers (start/stop/scan) */
+/* Cámara helpers */
 async function ensureGetUserMedia() {
   if (navigator.mediaDevices?.getUserMedia) return true;
   const legacy = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -318,8 +339,9 @@ window.addEventListener('beforeunload', stopCamera);
 
 /* Flujo */
 function resetFlow(){
-  CURRENT_ENTRY=null; CHOSEN_CAMERA=null; CHOSEN_ROW=null; MODE='place'; SRC_ROW=null;
+  CURRENT_ENTRY=null; CHOSEN_CAMERA=null; CHOSEN_ROW=null; MODE='place'; SRC_ROW=null; CURRENT_PLACE_CONTEXT=null;
   entryBox.classList.add('d-none'); camsBox.classList.add('d-none'); rowsBox.classList.add('d-none'); confirmBox.classList.add('d-none');
+  crossPlantWarning.classList.add('d-none'); crossPlantWarning.innerHTML='';
   camsList.innerHTML=''; rowsList.innerHTML=''; confirmMsg.textContent='';
   moveRowBtn.classList.add('d-none'); moveEntryBtn.classList.add('d-none'); moveRowHint.classList.add('d-none');
   moveRowBtn.disabled = true; moveRowBtn.textContent = '🚚 Mover toda la fila (cargando…)';
@@ -347,6 +369,8 @@ async function handleScanCode(palletCode){
     const st = await fetchJSON(`${API_PSTATUS}?code=${encodeURIComponent(palletCode)}`);
     if (!st.ok) throw new Error(st.error || 'No se pudo resolver el palet');
 
+    CURRENT_PLACE_CONTEXT = st.place_context || null;
+
     const ent = st.entrada_num || '';
     const counts = ent ? await fetchJSON(`${API_COUNTS}?entrada_num=${encodeURIComponent(ent)}`) : { ok:true, total:0, pending:0 };
 
@@ -355,13 +379,13 @@ async function handleScanCode(palletCode){
     const placed  = Math.max(0, total - pending);
 
     MODE = st.placed ? 'move' : 'place';
-    CURRENT_ENTRY = { entrada_num: ent, total, pending };
+    CURRENT_ENTRY = { entrada_num: ent, total, pending, pallet_num: st.pallet_num || palletCode };
 
     entryNum.textContent   = ent || '—';
     entryTotal.textContent = total;
     entryPend.textContent  = pending;
 
-    const baseInfo = `${st.variedad || '—'} / ${st.propietario || st?.entrada?.propietario || '—'} / ${st.entrada?.matricula || '—'}`;
+    const baseInfo = `${st.variedad || st?.plegado?.variedad || '—'} / ${st.propietario || st?.entrada?.propietario || '—'} / ${st.entrada?.matricula || '—'}`;
     if (MODE === 'move'){
       extraInfo.innerHTML = `<span class="text-dark bg-warning px-2 py-1 rounded fw-semibold">MODO MOVER</span> · ${escapeHtml(baseInfo)}${ent?` · Ubicados: <b>${placed}</b>`:''}`;
     } else {
@@ -369,6 +393,16 @@ async function handleScanCode(palletCode){
     }
     entryBox.classList.remove('d-none');
     applyModeStyles();
+
+    const warningHtml = crossPlantHtml(CURRENT_PLACE_CONTEXT);
+    if (warningHtml) {
+      crossPlantWarning.innerHTML = warningHtml;
+      crossPlantWarning.classList.remove('d-none');
+      toast('warning','Ubicado en otra planta','Revisa el aviso antes de confirmar el traslado.', 8000);
+    } else {
+      crossPlantWarning.classList.add('d-none');
+      crossPlantWarning.innerHTML = '';
+    }
 
     // Mostrar SIEMPRE ambas opciones en modo mover
     moveRowBtn.classList.add('d-none');
@@ -385,7 +419,8 @@ async function handleScanCode(palletCode){
           camera_id: Number(st.row_info.camera_id),
           row_group_id: Number(st.row_info.row_group_id),
           label: String(st.row_info.label || 'Fila'),
-          count: Number(st.row_info.count || 0)
+          count: Number(st.row_info.count || 0),
+          place_context: CURRENT_PLACE_CONTEXT
         };
         moveRowBtn.textContent = `🚚 Mover toda la fila «${SRC_ROW.label}» (${SRC_ROW.count})`;
         moveRowBtn.disabled = SRC_ROW.count <= 0;
@@ -394,7 +429,7 @@ async function handleScanCode(palletCode){
         moveRowBtn.disabled = true;
       }
       moveRowBtn.classList.remove('d-none');
-      moveRowHint.textContent = 'Elige si mover solo esta entrada o la fila completa; luego selecciona cámara y fila destino.';
+      moveRowHint.textContent = 'Elige si mover esta entrada o la fila completa; luego selecciona cámara y fila destino.';
       moveRowHint.classList.remove('d-none');
     }
 
@@ -439,7 +474,7 @@ async function loadCameras(){
 
 /* 3) Elegir cámara → cargar filas */
 async function selectCamera(cam){
-  CHOSEN_CAMERA = { id: cam.id, name: cam.name };
+  CHOSEN_CAMERA = { id: cam.id, name: cam.name, plant_code: cam.plant_code || null };
   showBusy(true);
   try{
     const res = await fetchJSON(`${API_ROWS}?camera_id=${encodeURIComponent(cam.id)}`);
@@ -484,6 +519,11 @@ function selectRow(r){
   } else { // move_row
     const cnt = SRC_ROW?.count || 0;
     msg = `Mover <b>fila completa</b> «${escapeHtml(SRC_ROW?.label||'—')}» (${cnt} palet(es)) a <b>${escapeHtml(r.label)}</b> de <b>${escapeHtml(CHOSEN_CAMERA.name)}</b>.`;
+  }
+
+  const warningHtml = (MODE !== 'place') ? crossPlantHtml(CURRENT_PLACE_CONTEXT) : '';
+  if (warningHtml) {
+    msg += `<div class="alert alert-warning mt-3 mb-0">${warningHtml}</div>`;
   }
 
   confirmMsg.innerHTML = msg;
