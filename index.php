@@ -186,6 +186,14 @@ $router->post('/admin-plantas/usuarios', function () {
     require __DIR__ . '/modules/admin-plantas/usuarios.php';
     renderLayout($content);
 });
+$router->get('/admin-plantas/seleccionar', function () {
+    require __DIR__ . '/modules/admin-plantas/seleccionar.php';
+    renderLayout($content);
+});
+$router->post('/admin-plantas/seleccionar', function () {
+    require __DIR__ . '/modules/admin-plantas/seleccionar.php';
+    renderLayout($content);
+});
 $router->get('/camaras-ubicacion', function () {
     $manager = new ModuleManager();
     $visibleModules = $manager->getVisibleModulesForUser();
