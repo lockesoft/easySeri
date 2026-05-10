@@ -1,6 +1,6 @@
 # 🧭 GUÍA DEL PROYECTO - easySeri
 
-Última revisión: 2026-05-09
+Última revisión: 2026-05-10
 
 ---
 
@@ -46,9 +46,14 @@ Reglas prácticas:
 - ✔ Ruta `/easyseri/camaras-ubicacion/scan` funcionando.
 - ✔ Botón desde módulo hacia escaneo funcionando.
 - ✔ Integración legacy funcionando técnicamente.
-- ✔ La prueba real actual será en planta A2.
-- ✔ En este momento la prueba real disponible es con palets de plegado.
-- ✔ Se decide crear un módulo común `admin-plantas` para gestionar plantas dinámicamente.
+- ✔ Módulo común `admin-plantas` creado.
+- ✔ Gestión dinámica de plantas creada.
+- ✔ Asignación de plantas a usuarios creada.
+- ✔ Selector de planta activa creado.
+- ✔ `cameras.php` ya filtra cámaras por planta activa.
+- ⚠ Pendiente validar en planta el filtrado de cámaras por planta activa.
+- ⚠ Pendiente validar escaneo real en planta A2.
+- ⚠ Pendiente adaptar flujo específico de plegado individual.
 
 ---
 
@@ -64,6 +69,8 @@ Contiene tablas del core:
 - `core_roles`
 - `core_permissions`
 - `core_modules`
+- `core_plants`
+- `core_user_plants`
 
 Resultado verificado:
 
@@ -76,22 +83,13 @@ Resultado verificado:
   - Manolo
   - Vicente Taberner
 
-Columnas verificadas en `core_users`:
+Modelo multi-planta definido:
 
-- `id`
-- `name`
-- `email`
-- `password_hash`
-- `is_active`
-- `created_at`
-- `updated_at`
-
-Conclusión:
-
-- ❌ `core_users` todavía no tiene campo ni relación de planta.
-- ✔ Hay usuarios que pueden necesitar acceso a una sola planta.
-- ✔ Hay usuarios que pueden necesitar acceso a varias plantas.
-- ✔ No se debe resolver multi-planta solo con un campo único obligatorio en `core_users`.
+```sql
+core_plants
+core_user_plants
+core_users.default_plant_id
+```
 
 ### Base de datos cámaras / legacy
 
@@ -113,7 +111,7 @@ Contiene tablas del módulo cámaras:
 
 Tabla: `ubicacion.cameras`.
 
-Columnas verificadas:
+Columnas verificadas inicialmente:
 
 - `id`
 - `name`
@@ -123,7 +121,13 @@ Columnas verificadas:
 - `entry_col`
 - `notes`
 
-Cámaras actuales verificadas:
+Cambio multi-planta aplicado:
+
+- ✔ Se añade `plant_code` en `ubicacion.cameras` mediante migración.
+- ✔ Las cámaras existentes deben quedar marcadas como `A1`.
+- ✔ `modules/camaras-ubicacion/legacy/api/cameras.php` filtra por `plant_code` usando la planta activa del usuario.
+
+Cámaras actuales verificadas antes de crear A2:
 
 | id | name | code | priority | Observación |
 |---:|---|---|---:|---|
@@ -136,9 +140,9 @@ Cámaras actuales verificadas:
 Conclusión:
 
 - ✔ Ahora mismo solo hay cámaras de A1 cargadas.
-- ❌ `cameras` no tiene campo de planta.
-- ⚠ El riesgo de mezcla A1/A2 no existe hoy porque no hay cámaras A2 todavía.
-- ⚠ El riesgo aparecerá cuando añadamos cámaras A2 si no se añade control de planta.
+- ✔ Ya existe preparación para filtrar por planta activa.
+- ⚠ No se puede validar en casa porque requiere flujo real de escaneo/cámaras.
+- ⚠ Queda pendiente validarlo en planta.
 
 ---
 
@@ -172,8 +176,8 @@ Conclusión:
 
 - ✔ La tabla ya está preparada parcialmente para distinguir origen: campo/entrada frente a plegado.
 - ❌ `placements` no tiene campo de planta.
-- ✔ La planta puede deducirse por la cámara si `cameras` recibe campo de planta.
-- Recomendación: no duplicar planta en `placements` de momento salvo necesidad real; primero asociar planta a `cameras`.
+- ✔ La planta puede deducirse por la cámara mediante `cameras.plant_code`.
+- Recomendación: no duplicar planta en `placements` de momento salvo necesidad real.
 
 ---
 
@@ -287,14 +291,14 @@ Decisión importante:
 
 ---
 
-## 10. Endpoints funcionales
+## 10. Endpoints funcionales / modificados
 
 ### Lectura
 
 - ✔ `pallet_status.php`
 - ✔ `entry_counts.php`
-- ✔ `cameras.php`
 - ✔ `camera_rows.php`
+- ✔ `cameras.php` modificado para filtrar por planta activa.
 
 ### Escritura
 
@@ -305,6 +309,7 @@ Nota importante:
 
 - `entry_counts.php` está orientado a entradas de campo (`erp_palets_mirror`).
 - Para plegados individuales, no se debe depender de `entrada_num` como si fuese campo.
+- `cameras.php` requiere que exista `ubicacion.cameras.plant_code`.
 
 ---
 
@@ -348,11 +353,12 @@ Nota importante:
 ### Módulo común de plantas
 
 - ✔ Se decide crear un módulo propio `admin-plantas`.
-- ✔ El módulo permitirá crear plantas de trabajo de forma dinámica.
-- ✔ El módulo permitirá editar plantas.
-- ✔ El módulo permitirá activar/desactivar plantas.
-- ✔ El módulo permitirá asignar una o varias plantas a cada usuario.
-- ✔ El módulo permitirá modificar las plantas asignadas a cada usuario.
+- ✔ El módulo permite crear plantas de trabajo de forma dinámica.
+- ✔ El módulo permite editar plantas.
+- ✔ El módulo permite activar/desactivar plantas.
+- ✔ El módulo permite asignar una o varias plantas a cada usuario.
+- ✔ El módulo permite modificar las plantas asignadas a cada usuario.
+- ✔ El módulo permite seleccionar planta activa.
 - ✔ Esta gestión será común para todo easySeri, no exclusiva de cámaras.
 
 ### Tipos de palets / origen operativo
@@ -380,57 +386,43 @@ Acción futura:
 - Mantener estructura de tablas.
 - No borrar nada sin copia previa y revisión de tablas reales.
 
-### 12.2 Acceso de usuarios a plantas
+### 12.2 Validación de selector/planta activa en cámaras
 
-Estado: **PENDIENTE**.
+Estado: **PENDIENTE DE VALIDACIÓN EN PLANTA**.
 
-Hecho verificado:
+Hecho:
 
-- `core_users` no tiene campo de planta.
+- `PlantService` existe.
+- Selector de planta activa existe.
+- `cameras.php` usa planta activa.
 
-Decisión corregida:
+Pendiente:
 
-- ❌ No basta con añadir solo `core_users.plant` como solución final.
-- ✔ Hay que permitir usuarios con acceso a A1, A2 o ambas.
-- ✔ La gestión debe hacerse desde un módulo administrativo.
+- Probar en planta con usuario asignado a A1.
+- Probar en planta con usuario asignado a A2.
+- Confirmar que con planta A1 aparecen cámaras A1.
+- Confirmar que con planta A2 no aparecen cámaras A1.
+- Crear cámaras A2 y confirmar que aparecen solo en A2.
 
-Diseño recomendado:
+Motivo de pendiente:
 
-- Crear catálogo de plantas.
-- Crear tabla relacional usuario-planta.
-- Añadir opcionalmente planta por defecto del usuario.
-- Crear módulo `admin-plantas` para gestionar todo desde la interfaz.
-
-Modelo recomendado:
-
-```sql
-core_plants
-core_user_plants
-core_users.default_plant_id
-```
-
-Ventaja:
-
-- Usuario de A1: una relación.
-- Usuario de A2: una relación.
-- Usuario A1+A2: dos relaciones.
-- Planta activa se decide por defecto o por selección.
-- El sistema puede crecer a más plantas sin rehacer estructura.
+- El usuario está en casa y no puede hacer escaneo/prueba real de planta en este momento.
 
 ### 12.3 Planta de cámaras
 
-Estado: **PENDIENTE**.
+Estado: **PENDIENTE DE COMPLETAR CON A2**.
 
 Hecho verificado:
 
-- `ubicacion.cameras` no tiene campo de planta.
 - Todas las cámaras actuales son A1.
+- `cameras.php` filtra por planta activa.
 
 Acción futura recomendada:
 
-- Añadir campo `plant_code` o `plant_id` en `ubicacion.cameras`.
-- Marcar cámaras actuales como `A1`.
-- Crear después cámaras A2.
+- Crear cámaras A2 reales.
+- Definir códigos.
+- Definir prioridades.
+- Definir filas/posiciones si aplica.
 
 ### 12.4 Flujo plegado individual
 
@@ -460,8 +452,9 @@ Acción futura recomendada:
 - Layout.
 - Módulos dinámicos.
 - Menú por permisos.
+- `PlantService` para plantas permitidas y planta activa.
 
-### Módulo plantas propuesto
+### Módulo plantas
 
 Módulo: `admin-plantas`.
 
@@ -473,8 +466,9 @@ Responsabilidad:
 - Activación/desactivación de plantas.
 - Asignación de plantas a usuarios.
 - Definición de planta por defecto del usuario.
+- Selección de planta activa.
 
-Este módulo debe formar parte del core funcional común de easySeri.
+Este módulo forma parte del core funcional común de easySeri.
 
 ### Módulo cámaras
 
@@ -483,7 +477,7 @@ Este módulo debe formar parte del core funcional común de easySeri.
 - APIs legacy adaptadas.
 - Base de datos independiente para cámaras.
 - Usuario easySeri usado en operaciones adaptadas.
-- Debe consumir la planta activa definida por el core/módulo plantas.
+- `cameras.php` consume la planta activa definida por `PlantService`.
 
 ### Requisito multi-planta
 
@@ -498,7 +492,7 @@ El sistema debe evolucionar para trabajar correctamente con:
 
 ---
 
-## 14. Flujo real validado
+## 14. Flujo real validado / pendiente
 
 ### Flujo scan campo actual
 
@@ -509,7 +503,7 @@ pallet_status.php
   ↓
 entry_counts.php
   ↓
-cameras.php
+cameras.php filtrado por planta activa
   ↓
 camera_rows.php
   ↓
@@ -517,6 +511,10 @@ scan_confirm.php
   ↓
 INSERT placements
 ```
+
+Estado:
+
+- ⚠ Pendiente validar en planta después del cambio de `cameras.php`.
 
 ### Flujo move actual
 
@@ -529,6 +527,10 @@ UPDATE placement anterior con removed_at
   ↓
 INSERT nueva posición
 ```
+
+Estado:
+
+- ⚠ Pendiente validar que el destino no permita mezcla de plantas cuando existan cámaras A2.
 
 ### Flujo pendiente para plegado A2
 
@@ -560,53 +562,32 @@ INSERT placements con source_type = plegado
 
 ## 15. Siguiente fase
 
-**FASE 4.0 — Crear módulo plantas y preparar prueba A2 con plegados sin romper A1**
+**FASE 4.1 — Validar planta activa en cámaras y preparar flujo plegado individual**
 
 Objetivo:
 
 ```txt
-Crear gestión dinámica de plantas, asignarlas a usuarios y usar esa base para validar cámaras en A2.
+Validar que cámaras respeta planta activa y preparar el flujo específico de plegados para A2.
 ```
 
 ---
 
-## 16. Tareas de Fase 4.0
+## 16. Tareas siguientes
 
-### 16.1 SQL estructural mínimo multi-planta
-
-Prioridad: **ALTA**.
-
-Pendiente preparar y ejecutar con copia previa:
-
-- Crear tabla `core_plants`.
-- Crear tabla `core_user_plants`.
-- Añadir `default_plant_id` opcional en `core_users`.
-- Crear plantas iniciales A1 y A2.
-- Asignar plantas iniciales a usuarios.
-- Añadir planta a `ubicacion.cameras`.
-- Marcar cámaras actuales como A1.
-- No tocar todavía `placements` salvo necesidad verificada.
-
-### 16.2 Crear módulo `admin-plantas`
+### 16.1 Validar en planta filtrado por planta activa
 
 Prioridad: **ALTA**.
 
 Pendiente:
 
-- Crear carpeta `modules/admin-plantas`.
-- Crear `module.json`.
-- Crear `menu.php`.
-- Crear pantalla listado de plantas.
-- Crear pantalla alta/edición de plantas.
-- Crear pantalla de asignación de plantas a usuarios o integrarlo en `admin-usuarios/editar`.
-- Crear permisos asociados.
+- Subir `cameras.php` modificado.
+- Confirmar que existe `core/plants/PlantService.php` en servidor.
+- Confirmar que existe `ubicacion.cameras.plant_code`.
+- Seleccionar A1 y comprobar que aparecen cámaras A1.
+- Seleccionar A2 y comprobar que no aparecen cámaras A1.
+- Crear cámaras A2 y comprobar que aparecen solo con A2.
 
-Permisos propuestos:
-
-- `admin-plantas.access`
-- `admin-plantas.manage`
-
-### 16.3 Crear cámaras A2
+### 16.2 Crear cámaras A2
 
 Prioridad: **ALTA**.
 
@@ -617,18 +598,7 @@ Pendiente:
 - Definir prioridades.
 - Definir filas/posiciones si aplica.
 
-### 16.4 Adaptar lectura de cámaras por planta
-
-Prioridad: **ALTA**.
-
-Pendiente:
-
-- `cameras.php` debe filtrar por planta activa.
-- La planta activa vendrá de las plantas permitidas del usuario.
-- Usuarios con una sola planta no deberían elegir.
-- Usuarios con varias plantas podrán elegir planta activa.
-
-### 16.5 Adaptar flujo plegado individual
+### 16.3 Adaptar flujo plegado individual
 
 Prioridad: **ALTA**.
 
@@ -639,7 +609,7 @@ Pendiente:
 - Permitir ubicar un único palet plegado.
 - Insertar `source_type = plegado`.
 
-### 16.6 Validación real en A2
+### 16.4 Validación real en A2
 
 Prioridad: **ALTA**.
 
@@ -694,6 +664,7 @@ Mitigación:
 - Asociar usuarios a una o varias plantas.
 - Trabajar siempre con planta activa.
 - Filtrar cámaras/filas por planta activa.
+- Validar también en `scan_confirm.php` y `move_confirm.php` que la cámara destino pertenece a la planta activa.
 
 ### Riesgo 6 — Mezcla de origen plegado/campo
 
@@ -728,11 +699,12 @@ El módulo `camaras-ubicacion`:
 - ✔ Ya inserta ubicaciones para flujo de entrada.
 - ✔ Ya mueve palets.
 - ✔ Ya tiene `source_type` preparado para `entrada` y `plegado`.
+- ✔ Ya tiene filtro de cámaras por planta activa en `cameras.php`.
 
 Ahora toca:
 
 ```txt
-crear el módulo común de plantas, asignar plantas a usuarios, preparar cámaras A2 y adaptar el flujo de plegado individual.
+validar en planta el filtro por planta activa, crear cámaras A2 y preparar el flujo específico de plegado individual.
 ```
 
 ---
@@ -742,15 +714,15 @@ crear el módulo común de plantas, asignar plantas a usuarios, preparar cámara
 Opción recomendada:
 
 ```txt
-MÓDULO ADMIN-PLANTAS + SQL MULTI-PLANTA RELACIONAL + CÁMARAS A2 + FLUJO PLEGADO INDIVIDUAL
+DETENER CAMBIOS EN CÁMARAS HASTA VALIDAR EN PLANTA EL FILTRO POR PLANTA ACTIVA
 ```
 
-Antes de ejecutar SQL:
+Cuando se vuelva a planta:
 
-1. Hacer copia/export.
-2. Confirmar que `erp_plegados_mirror.almacen = 02` corresponde a A2.
-3. Confirmar nombres/códigos de cámaras A2.
-4. Crear estructura de plantas.
-5. Crear módulo `admin-plantas`.
-6. Probar asignación de usuarios a plantas.
-7. Probar con un palet plegado real en A2.
+1. Probar selector de planta activa.
+2. Probar escaneo con planta A1.
+3. Confirmar listado de cámaras A1.
+4. Seleccionar A2.
+5. Confirmar que no aparecen cámaras A1.
+6. Crear cámaras A2.
+7. Probar plegado real en A2.
